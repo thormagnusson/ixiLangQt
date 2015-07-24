@@ -314,7 +314,7 @@ XiiLang {
 		\deb1.postln;
 		doc.background_(doccolor);
 		doc.parent.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
-		doc.setFont(Font("Monaco",30));
+		doc.font_(Font("Monaco", 16));
 		if(txt == false, { doc.string_("hello") });
 		doc.setProperty(\styleSheet, "color:white"); // set the cursor to white
 		doc.setStringColor(oncolor, 0, 100000); // then set the text color to whatever the user has specified
@@ -547,6 +547,7 @@ XiiLang {
 									cursorPos = doc.selectionStart; // get cursor pos
 									this.parseSnapshot("snapshot " ++ snapshot.asString);
 									//doc.selectRange(cursorPos); // set cursor pos again
+									doc.select(cursorPos,0); // xxx
 									}.defer;
 								})
 							}.fork(TempoClock.new) // not using default clock, since new tempo affects wait (strange?/bug?)
@@ -2628,6 +2629,7 @@ XiiLang {
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
 						doc.setStringColor(oncolor, stringstart, stringend-stringstart);
 						//doc.selectRange(cursorPos); // set cursor pos again
+					doc.select(cursorPos, 0);
 					}.defer;
 			});
 
@@ -2646,6 +2648,7 @@ XiiLang {
 							doc.setStringColor(activecolor, stringstart, stringend-stringstart);
 						});
 						//doc.selectRange(cursorPos); // set cursor pos again
+						doc.select(cursorPos, 0);
 					}.defer;
 					0.3.wait;
 					{ // swap agent's strings
@@ -2656,6 +2659,7 @@ XiiLang {
 							modstring ++
 							doc.string[stringend..doc.string.size];
 							doc.string_(newstr);
+							doc.select(cursorPos, 0);
 							/*doc.string_( modstring, stringstart, stringend-stringstart);*/
 							//doc.string_(doc.string + "\n" ++ modstring);
 						});
@@ -2682,8 +2686,9 @@ XiiLang {
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
 						(stringend.notNil && stringstart.notNil).if({
 							doc.setStringColor(oncolor, stringstart, stringend-stringstart);
-						})
+						});
 						//doc.selectRange(cursorPos); // set cursor pos again
+						doc.select(cursorPos, 0);
 					}.defer;
 
 				}.fork(TempoClock.new);
