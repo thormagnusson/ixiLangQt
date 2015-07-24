@@ -71,8 +71,8 @@ TODO: Check the use of String:drop(1) and String:drop(-1)
 
 
 // Add: ptpd support for netclocks
-// Êsudo ./ptpd -cd
-// Êhttp://sourceforge.net/projects/ptpd/develop
+// ï¿½sudo ./ptpd -cd
+// ï¿½http://sourceforge.net/projects/ptpd/develop
 
 /*
 Dependencies:
@@ -84,14 +84,44 @@ ixiViews (for MIDIKeyboard in the XiiLangGUI)
 // add slide (from Array helpfile)
 
 // TODO: add a "kill invisible" function that silences all agents that have been deleted from the score
-// TODO: how about visualising the actions of the user in ixi lang. Data visualise it. Compare the automation and user data. 
+// TODO: add a "reorgan/inject" function that injects new chars in percussive mode
+// TODO: how about visualising the actions of the user in ixi lang. Data visualise it. Compare the automation and user data.
 // TODO: Use autuconductor to apply actions to different agents.
 
 // TODO: think about NRT rendering of playscores
 
+// TODO: make a note that a particular project does not exist and that the new project was created.
 
 
-XiiLang {	
+
+
+// TODO NOW : fix repeats in groups (DONE, but check)
+// - make all synthdefs panable (Pan2 & PanAz)
+// Freeall bug, recursion not working properly (try this code):
+/*
+XiiLang(txt:true)
+
+ag1 -> |b d cc cb  f  cb|@1
+
+ag2 -> |  c  c       cc |@1
+
+ag3 -> xylo[     1   5 2  1 ]@1
+ag4 -> wood[        211  5  ]@1
+
+shake cc
+
+group gr1 -> ag3 ag4
+
+ma1 -> ~ ag1 1 gr1 1 ~
+
+// when freeing the below, there is an error
+ma2 -> ~ ag1 1 ma1 1 ~
+
+*/
+
+
+
+XiiLang {
 	classvar globaldocnum;
 	var <>doc, docnum, <doccolor, <oncolor, activecolor, offcolor, deadcolor, proxyspace, groups, score;
 	var agentDict, instrDict, ixiInstr, effectDict, varDict, snapshotDict, scoreArray, metaAgentDict;
@@ -103,11 +133,12 @@ XiiLang {
 	var time, tempo, tapping = false, tapcount = 0;
 	var thisversion = 4;
 	var numChan;
+	var win;
 
 	*new { arg project="default", keyarg="C", txt=false, newdoc=false, language, dicts, score, numChannels=2;
 		^super.new.initXiiLang( project, keyarg, txt, newdoc, language, dicts, score, numChannels);
 	}
-		
+
 	initXiiLang {arg project, keyarg, txt, newdoc, lang, dicts, score, numChannels;
 		"project, keyarg, txt, newdoc, lang, dicts, score, numChannels".postln;
 		[project, keyarg, txt, newdoc, lang, dicts, score, numChannels].postln;
@@ -138,7 +169,7 @@ XiiLang {
 
 		if(dicts.isNil, {
 			agentDict = IdentityDictionary.new; // dicts are sent from "load"
-			metaAgentDict = (); // 
+			metaAgentDict = (); //
 			varDict = IdentityDictionary.new;
 			snapshotDict = IdentityDictionary.new; // dicts are sent from "load"
 			groups = ();
@@ -152,15 +183,15 @@ XiiLang {
 		});
 		TempoClock.default.tempo = 120/60;
 		projectname = project;
-		
+
 		midiclient = 0;
-		
+
 		try{ // try necessary, since a user without MIDI IAC busses reported that the next two lines gave errors
 			MIDIClient.init;
 			// midiclient = MIDIOut(0, MIDIClient.destinations[0].uid);
 			midiclient = MIDIOut(0);
 		};
-		
+
 		eventtype = \note;
 		this.makeEffectDict; // in a special method, as it has to be called after every cmd+dot
 		this.envirSetup( txt, newdoc, project );
@@ -180,15 +211,15 @@ XiiLang {
 			proxyspace = ProxySpace.new.know_(true);
 			scoreArray = [];
 		});
-		englishCommands = ["group", "sequence", "future", "snapshot", "->", "))", "((", "|", "[", "{", "~", ")", 
-				"$", ">>", "<<", "tempo", "scale", "scalepush", "tuning", "tuningpush", "remind", "help", 
-				"tonality", "instr", "tonic", "grid", "kill", "doze", "perk", "nap", "shake", "swap", "replace", 
-				"insert", "remove", "slide", ">shift", "<shift", "invert", "expand", "revert", "up", "down", "yoyo", 
-				"order", "dict", "store", "load", "midiclients", "midiout", "matrix", "autocode", "coder", "twitter", 
-				"+", "-", "*", "/", "!", "^", "(", "<", "@", "hash", "beer", "coffee", "LSD", "detox", "new", "gui", 
-				"savescore", "playscore", "suicide", "hotline", "newrec", "input","rumba1", "rumba2", "rumba3"];  // removed "." XXX
-		
-		if(lang.isNil, { 
+		englishCommands = ["group", "sequence", "future", "snapshot", "->", "))", "((", "|", "[", "{", "~", ")",
+				"$", ">>", "<<", "tempo", "scale", "scalepush", "tuning", "tuningpush", "remind", "help",
+				"tonality", "instr", "tonic", "grid", "kill", "doze", "perk", "nap", "shake", "swap", "replace",
+				"insert", "remove", ">shift", "<shift", "invert", "expand", "revert", "up", "down", "yoyo",
+				"order", "dict", "store", "load", "midiclients", "midiout", "matrix", "autocode", "coder", "twitter",
+				"+", "-", "*", "/", "!", "^", "(", "<", "@", "hash", "beer", "coffee", "LSD", "detox", "new", "gui",
+				"savescore", "playscore", "suicide", "hotline", "newrec", "input"];  // removed "." XXX
+
+		if(lang.isNil, {
 			english = true; // might not need this;
 			langCommands = englishCommands;
 		}, {
@@ -196,13 +227,13 @@ XiiLang {
 			language = XiiLangDicts.getDict(lang.asSymbol);
 			langCommands = XiiLangDicts.getList(lang.asSymbol);
 		});
-		
+
 		[\langCommands, langCommands].postln;
-		
+
 		if(score.isNil.not, {
-			this.playScore(score[1]);	
+			this.playScore(score[1]);
 		});
-		
+
 		this.addixiMenu;
 	}
 
@@ -226,45 +257,85 @@ XiiLang {
 	//set up document and the keydown control
 	envirSetup { arg txt, newdoc, project;
 		var recdoc;
-		
-		GUI.cocoa;
-		if(newdoc, {
-			doc = Document.new;		
-		}, {
-			doc = Document.current;
+
+		/*
+		//GUI.cocoa;
+		//if(newdoc, {
+		//	doc = Document.new;
+		//}, {
+		//	doc = Document.current;
+		//});
+
+		// color scheme
+		try{ // check if the color file exists
+			#doccolor, oncolor, activecolor, offcolor, deadcolor = Object.readArchive(Platform.userAppSupportDir ++"/ixilang/"++project++"/colors.ixi")
+		};
+		if(doccolor.isNil, {
+			doccolor = Color.white;
+			oncolor = Color.black;
+			activecolor = Color.green;//Color.yellow;
+			offcolor = Color.blue; //Color.green;
+			deadcolor = Color.red;
 		});
-		
+		win = Window.new("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
+		win.bounds_(Rect(400,300, 1000, 600));
+		win.front;
+		doc = TextView(win.asView, Rect(10, 10, 980,580)).focus(true);
+		doc.enterInterpretsSelection = true;
+		//doc.setBackground(doccolor);
+		//doc.setStringColor(oncolor);
+		if(txt == false, { doc.setString("") });
+		win.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
+		doc.setFont(Font("Monaco",20));
+		//doc.promptToSave_(false);
+
+		*/
+		if(newdoc, {
+			//doc = Document.new;
+			doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
+		}, {
+			//doc = Document.current;
+			doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
+		});
+
 		// color scheme
 		try{ // check if the color file exists
 			#doccolor, oncolor, activecolor, offcolor, deadcolor = Object.readArchive("ixilang/"++project++"/colors.ixi")
 		};
-		if(doccolor.isNil, { 
+		if(doccolor.isNil, {
 			doccolor = Color.black;
 			oncolor = Color.white;
 			activecolor = Color.yellow;
 			offcolor = Color.green;
 			deadcolor = Color.red;
 		});
-		
-		doc.bounds_(Rect(400,300, 1000, 600));
+
+		//doc.parent.bounds_(Rect(400,300, 1000, 600));
+		\deb1.postln;
 		doc.background_(doccolor);
-		doc.stringColor_(oncolor);
-		if(txt == false, { doc.string_("") });
-		doc.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
-		doc.font_(Font("Monaco",20));
-		doc.promptToSave_(false);		
-		doc.keyDownAction_({|doc, char, mod, unicode, keycode | 
+		doc.parent.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
+		doc.setFont(Font("Monaco",30));
+		if(txt == false, { doc.string_("hello") });
+		doc.setProperty(\styleSheet, "color:white"); // set the cursor to white
+		doc.setStringColor(oncolor, 0, 100000); // then set the text color to whatever the user has specified
+
+
+		doc.keyDownAction_({|doc, char, mod, unicode, keycode |
 			var linenr, string;
-			// evaluating code (the next line will use .isAlt, when that is available 
-			if((mod & 524288 == 524288) && ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)), { // alt + left or up or right or down arrow keys
+			//keycode.postln;
+			// evaluating code (the next line will use .isAlt, when that is available
+			if(((mod  == 524288) || (mod == 2621440))&& ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)), { // alt + left or up or right or down arrow keys
+				"eval".postln;
 				linenr = doc.string[..doc.selectionStart-1].split($\n).size;
-				doc.selectLine(linenr);
+				//doc.selectLine(linenr);
 				string = doc.selectedString;
-				if(keycode==123, { // not 124, 125, 
+				(string.size < 1).if({"Hilight some text!".warn});
+				string.postln;
+				if(keycode==123, { // not 124, 125,
 					this.freeAgent(string);
 				}, {
 					this.opInterpreter(string);
-				});				
+				});
 			});
 			// create a live sampler doc (fn+Enter)
 			if((mod == 8388864) && (unicode == 3), {
@@ -274,7 +345,7 @@ XiiLang {
 			if(((mod == 262145)||(mod==262401)) && (unicode == 44), {
 				if(tapping == false, {
 					time = Main.elapsedTime;
-					tapping = true;	
+					tapping = true;
 				});
 				tapcount = tapcount + 1;
 			});
@@ -285,12 +356,12 @@ XiiLang {
 				tapcount = 0;
 				" --->   ixi lang Tempo : set to % BPM\n".postf(tempo*60);
 				TempoClock.default.tempo = tempo;
-			}); 
+			});
 		});
-		doc.keyUpAction_({|doc, char, mod, unicode, keycode | 
+		doc.keyUpAction_({|doc, char, mod, unicode, keycode |
 			if(mod == 8388864, {
 				recdoc.close;
-			});	
+			});
 		});
 		doc.onClose_({
 			// xxx free buffers
@@ -300,77 +371,80 @@ XiiLang {
 				agent[2].stop;
 				agent[2] = nil;
 			});
-			snapshotDict[\futures].stop; 
+			snapshotDict[\futures].stop;
 		});
 		// these two folders are created if the user is downloading from github and hasn't created the ixilang folder in their SC folder
-		if(("ixilang").pathMatch==[], {
-			("mkdir -p" + ("ixilang")).unixCmd; // create the scores folder
+		if((Platform.userAppSupportDir ++"/ixilang").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang")).unixCmd; // create the scores folder
 			"ixi-lang NOTE: an ixi lang folder was not found in your SuperCollider directory - It was created".postln;
 		});
-		if(("ixilang/default").pathMatch==[], {
-			("mkdir -p" + ("ixilang/default")).unixCmd; // create the scores folder
+		if((Platform.userAppSupportDir ++"/ixilang/default").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/default")).unixCmd; // create the scores folder
 			"ixi-lang NOTE: an ixi lang default folder was not found in your ixi lang directory - It was created".postln;
 		});
 		// just make sure that all folders are in place
-		if(("ixilang/"++project++"/scores").pathMatch==[], {
-			("mkdir -p" + ("ixilang/"++project++"/scores")).unixCmd; // create the scores folder
+		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/scores").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/scores")).unixCmd; // create the scores folder
 			"ixi-lang NOTE: a scores folder was not found for saving scores - It was created".postln;
-		});	
-		if(("ixilang/"++project++"/recordings").pathMatch==[], {
-			("mkdir -p" + ("ixilang/"++project++"/recordings")).unixCmd; // create the recordings folder
+		});
+		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings")).unixCmd; // create the recordings folder
 			"ixi-lang NOTE: a recordings folder was not found for saving scores - It was created".postln;
-		});	
-		if(("ixilang/"++project++"/sessions").pathMatch==[], {
-			("mkdir -p" + ("ixilang/"++project++"/sessions")).unixCmd; // create the sessions folder
+		});
+		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions")).unixCmd; // create the sessions folder
 			"ixi-lang NOTE: a sessions folder was not found for saving scores - It was created".postln;
-		});	
-		if(("ixilang/"++project++"/samples").pathMatch==[], {
-			("mkdir -p" + ("ixilang/"++project++"/samples")).unixCmd; // create the samples folder
+		});
+		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/samples").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/samples")).unixCmd; // create the samples folder
 			"ixi-lang NOTE: a samples folder was not found for saving scores - It was created".postln;
-		});	
+		});
 	}
-	
+
 	// the interpreter of thie ixi lang
 	opInterpreter {arg string, return=false;
 		var oldop, operator; // the various operators of the language
 		var methodFound = false;
-		string = string.reject({ |c| c.ascii == 10 }); // get rid of char return XXX TESTING (before Helsinki GIG) 
+		string = string.reject({ |c| c.ascii == 10 }); // get rid of char return XXX TESTING (before Helsinki GIG)
+
+		string.postln;
+
 		scoreArray = scoreArray.add([Main.elapsedTime, string]); // recording the performance
 		operator = block{|break| // better NOT mess with the order of the following... (operators using -> need to be before "->")
 			langCommands.do({arg op; var suggestedop, space;
 				var c = string.find(op);
 				if(c.isNil.not, {
 					space = string[c..string.size].find(" "); // allowing for longer operators with same beginning as shorter
-					if(space.isNil.not, { 
+					if(space.isNil.not, {
 						suggestedop = string[c..(c+(space-1))];
-					},{	
+					},{
 						suggestedop = op;
 					});
 					if(suggestedop.size == op.size, { // this is a bit silly (longer op always has to be after the short)
 						methodFound = true;
 						break.value(op);
 					});
-				}); 
+				});
 			});
 			if(methodFound == false, {" --->   ixi lang error : OPERATOR NOT FOUND !!!".postln; });
 		};
-		
+
 		if(english.not, { // this is the only place of non-english code apart from in the init function
 			oldop = operator;
 			operator = try{ language[oldop.asSymbol] } ? operator; // if operator exists in the lang dict, else use the given
 			operator = operator.asString;
 			string = string.replace(oldop, operator);
 		});
-	
+
 		switch(operator)
 			{"dict"}{ // TEMP: only used for debugging
 				"-- Groups : ".postln;
 				Post << groups; "\n".postln;
-				
+
 				"-- agentDicts : ".postln;
 				Post << agentDict.keys; "\n".postln;
 				Post << agentDict; "\n".postln;
-				
+
 				"-- snapshotDicts : ".postln;
 				Post << snapshotDict; "\n".postln;
 
@@ -379,25 +453,25 @@ XiiLang {
 
 				"-- metaAgentDict : ".postln;
 				Post << metaAgentDict; "\n".postln;
-				
-				
+
+
 		//		"-- scoreArray : ".postln;
 		//		Post << scoreArray; "\n".postln;
-				
+
 		//		"-- buffers : ".postln;
 		//		Post << ixiInstr.returnBufferDict; "\n".postln;
 
 			}
-			{"store"}{ 
+			{"store"}{
 				var sessionstart, sessionend, session;
 				string = string.replace("    ", " ");
 				string = string.replace("   ", " ");
 				string = string.replace("  ", " ");
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 				sessionstart = string.findAll(" ")[0];
-				sessionend = string.findAll(" ")[1]; 
+				sessionend = string.findAll(" ")[1];
 				session = string[sessionstart+1..sessionend-1];
-				[projectname, key, language, doc.string, agentDict, snapshotDict, groups, docnum].writeArchive("ixilang/"++projectname++"/sessions/"++session++".ils");
+				[projectname, key, language, doc.string, agentDict, snapshotDict, groups, docnum].writeArchive(Platform.userAppSupportDir ++"/ixilang/"++projectname++"/sessions/"++session++".ils");
 			}
 			{"load"}{
 				var sessionstart, sessionend, session, key, language, project;
@@ -407,10 +481,10 @@ XiiLang {
 				string = string.replace("  ", " ");
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 				sessionstart = string.findAll(" ")[0];
-				sessionend = string.findAll(" ")[1]; 
+				sessionend = string.findAll(" ")[1];
 				session = string[sessionstart+1..sessionend-1];
 				doc.onClose; // call this to end all agents and groups in this particular doc if it has been running agents
-				#project, key, language, string, agentDict, snapshotDict, groups, docnum = Object.readArchive("ixilang/"++projectname++"/sessions/"++session++".ils");
+				#project, key, language, string, agentDict, snapshotDict, groups, docnum = Object.readArchive(Platform.userAppSupportDir ++"/ixilang/"++projectname++"/sessions/"++session++".ils");
 				doc.string = string;
 				XiiLang.new( project, key, true, false, language, [agentDict, snapshotDict, groups, docnum]);
 			}
@@ -419,9 +493,9 @@ XiiLang {
 			}
 			{"->"}{
 				var mode;
-				mode = block{|break| 
+				mode = block{|break|
 					["|", "[", "{", ")", "$", "~"].do({arg op, i;						var c = string.find(op);
-						if(c.isNil.not, {break.value(i)}); 
+						if(c.isNil.not, {break.value(i)});
 					});
 				};
 				switch(mode)
@@ -438,14 +512,14 @@ XiiLang {
 				// future << thor // cancel the scheduling
 				var command, commandstart, colon, seconds, times, agent, pureagent, agentstart, agentend, argument;
 				var cursorPos, testcond, snapshot, barmode, argumentarray, tempstring;
-				
+
 				string = string.reject({ |c| c.ascii == 10 }); // get rid of char return
 				// allow for some sloppyness in style
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 				string = string.replace("    ", " ");
 				string = string.replace("   ", " ");
 				string = string.replace("  ", " ");
-								
+
 				if(string.contains(">>"), { // setting future event(s)
 					commandstart = string.find(">");
 					colon = string.find(":");
@@ -461,34 +535,34 @@ XiiLang {
 						if(snapshotDict.size > 1, {
 						snapshotDict[\futures].stop; // futures is when future is choosing a random snapshot
 						snapshotDict[\futures] = // don't need to store the name, just a unique name
-							{ 
-								times.do({arg i; 
+							{
+								times.do({arg i;
 									seconds.wait;
 									testcond = false;
 									while({ testcond.not }, {
 										snapshot = snapshotDict.keys.choose;
 										if(snapshot != \futures, { testcond = true });
 									});
-									{ 
+									{
 									cursorPos = doc.selectionStart; // get cursor pos
 									this.parseSnapshot("snapshot " ++ snapshot.asString);
-									doc.selectRange(cursorPos); // set cursor pos again
+									//doc.selectRange(cursorPos); // set cursor pos again
 									}.defer;
-								}) 
+								})
 							}.fork(TempoClock.new) // not using default clock, since new tempo affects wait (strange?/bug?)
 						}, {
 							" ---> ixi lang: you haven't stored more than one snapshot!".postln;
 						});
 					}, {
 						agentstart = string.findAll(" ")[3];
-						agentend = string.findAll(" ")[4]; 
+						agentend = string.findAll(" ")[4];
 						pureagent = string[agentstart+1..agentend-1];
 						agent = (docnum.asString++pureagent).asSymbol;
 						command = string[commandstart+3..agentstart-1];
 						argument = string[agentend..string.size-1];
 						argumentarray = [];
 						tempstring = "";
-						argument.do({arg item; 
+						argument.do({arg item;
 							if(item.isAlphaNum || (item == $_), {
 								tempstring = tempstring ++ item;
 							}, {
@@ -497,23 +571,23 @@ XiiLang {
 							});
 						});
 						if(argumentarray == [], {argumentarray = [argument]}); // removed .asInteger here XXX !!! could cause bugs
-						
+
 						//if future argument contains many args then put them into a list that will be wrappedAt in the future task
-						
+
 						if(groups.at(agent).isNil.not, { // the "agent" is a group so we need to set routine to each of the agents in the group
 							groups.at(agent).do({arg agentx, i;
 								{ var agent; // this var and the value statement is needed to individualise the agents in the future
 								agent = (docnum.asString++agentx).asSymbol;
 								agentDict[agent][2] = agentDict[agent][2].add(
-										{ 
+										{
 											times.do({arg i;
-												if(barmode, { 
-												      ((seconds*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait; 
+												if(barmode, {
+												      ((seconds*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait;
 												},{
 												      seconds.wait;
 												});
-												{ 
-												scoreArray = scoreArray.add([Main.elapsedTime, command+agentx+argumentarray.wrapAt(i).asString]); 
+												{
+												scoreArray = scoreArray.add([Main.elapsedTime, command+agentx+argumentarray.wrapAt(i).asString]);
 												this.parseMethod(command+agentx+argumentarray.wrapAt(i).asString); // do command
 												}.defer;
 											});
@@ -521,17 +595,17 @@ XiiLang {
 								);
 								}.value;
 							});
-						}, { // it is a real agent, not a group, then we ADD 
-							agentDict[agent][2] = agentDict[agent][2].add( 
-								{ 
-									times.do({arg i; 
-										if(barmode, { 
-										      ((seconds*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait; 
+						}, { // it is a real agent, not a group, then we ADD
+							agentDict[agent][2] = agentDict[agent][2].add(
+								{
+									times.do({arg i;
+										if(barmode, {
+										      ((seconds*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait;
 										},{
 										      seconds.wait;
 										});
-										{ 
-										scoreArray = scoreArray.add([Main.elapsedTime, command+pureagent+argumentarray.wrapAt(i).asString]); 
+										{
+										scoreArray = scoreArray.add([Main.elapsedTime, command+pureagent+argumentarray.wrapAt(i).asString]);
 										this.parseMethod(command+pureagent+argumentarray.wrapAt(i).asString); // do command
 										}.defer;
 									});
@@ -542,7 +616,7 @@ XiiLang {
 					});
 				}, { // removing future scheduling (syntax: future << agent)
 					agentstart = string.findAll(" ")[1];
-					agentend = string.findAll(" ")[2]; 
+					agentend = string.findAll(" ")[2];
 					agent = string[agentstart+1..agentend-1];
 					agent = (docnum.asString++agent).asSymbol;
 					if(groups.at(agent).isNil.not, { // the "agent" is a group so we need to set routine to each of the agents in the group
@@ -609,9 +683,9 @@ XiiLang {
 				agentDict.do({arg agent;
 					dictscore = agent[1].scorestring;
 					dictscore = dictscore.reject({ |c| c.ascii == 34 }); // get rid of quotation marks
-					mode = block{|break| 
+					mode = block{|break|
 						["|", "[", "{", ")"].do({arg op, i;						var c = dictscore.find(op);
-							if(c.isNil.not, {break.value(i)}); 
+							if(c.isNil.not, {break.value(i)});
 						});
 					};
 					switch(mode)
@@ -644,9 +718,9 @@ XiiLang {
 				agentDict.do({arg agent;
 					dictscore = agent[1].scorestring;
 					dictscore = dictscore.reject({ |c| c.ascii == 34 }); // get rid of quotation marks
-					mode = block{|break| 
+					mode = block{|break|
 						["|", "[", "{", ")"].do({arg op, i;						var c = dictscore.find(op);
-							if(c.isNil.not, {break.value(i)}); 
+							if(c.isNil.not, {break.value(i)});
 						});
 					};
 					switch(mode)
@@ -659,7 +733,7 @@ XiiLang {
 				});
 			}
 			{"remind"}{
-				this.getMethodsList;		
+				this.getMethodsList;
 			}
 			{"help"}{
 				//XiiLang.openHelpFile;	 // ixi lang doesn't have the new helpfile format
@@ -671,7 +745,7 @@ XiiLang {
 				doc.name_("scales");
 				doc.promptToSave_(false);
 				doc.background_(Color.black);
-				doc.stringColor_(Color.green);
+				doc.setStringColor(Color.green, 0, 1000000);
 				doc.bounds_(Rect(10, 500, 500, 800));
 				doc.font_(Font("Monaco",16));
 				doc.string_("Scales: " + ScaleInfo.scales.keys.asArray.sort.asCompileString
@@ -728,8 +802,8 @@ XiiLang {
 				groupname = (docnum.asString++groupname).asSymbol; // multidoc support
 				op = string.find("->");
 				groupitems = [];
-				(spaces.size-1).do({arg i; 
-					if(spaces[i] > op, { groupitems = groupitems.add( string[spaces[i]+1..spaces[i+1]-1].asSymbol ) }) 
+				(spaces.size-1).do({arg i;
+					if(spaces[i] > op, { groupitems = groupitems.add( string[spaces[i]+1..spaces[i+1]-1].asSymbol ) })
 				});
 				groups.add(groupname -> groupitems);
 			}
@@ -759,10 +833,10 @@ XiiLang {
 				sequenceagent = (docnum.asString++sequenceagent).asSymbol; // multidoc support
 				op = string.find("->");
 				seqagents = [];
-				originalagents = [];		
+				originalagents = [];
 
-				(spaces.size-1).do({arg i; 
-					if(spaces[i] > op, { 
+				(spaces.size-1).do({arg i;
+					if(spaces[i] > op, {
 						seqagents = seqagents.add((docnum.asString++string[spaces[i]+1..spaces[i+1]-1]).asSymbol);
 						originalagents = originalagents.add(string[spaces[i]+1..spaces[i+1]-1]);
 					});
@@ -770,7 +844,7 @@ XiiLang {
 				// check if all items are of same type
 				firsttype = agentDict[seqagents[0]][1].mode;
 				seqagents.do({arg agent; typecheck = typecheck + agentDict[agent][1].mode; });
-				
+
 				// then merge their score into one string (see below the dict idea)
 				if((typecheck/seqagents.size) != firsttype, {
 					" --->   ixi lang: ERROR! You are trying to mix playmodes".postln;
@@ -835,7 +909,7 @@ XiiLang {
 								agentDict[sequenceagent][1].panarr = panarr;
 								agentDict[sequenceagent][1].score = score;
 								agentDict[sequenceagent][1].quantphase = quantphase;
-							
+
 								doc.string_(doc.string.replace(originalstring, fullscore++"\n"));
 								this.playScoreMode1(sequenceagent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, agentDict[sequenceagent][1].repeats, false);
 						}
@@ -864,18 +938,18 @@ XiiLang {
 								doc.string_(doc.string.replace(originalstring, fullscore++"\n"));
 								this.playScoreMode2(sequenceagent, amparr, durarr, panarr, instrument, quantphase, newInstrFlag, agentDict[sequenceagent][1].repeats, false);
 						};
-				});				
+				});
 			}
 
 			// methods (called verbs in ixi lang) dealt with in the parsMethod below (these change string in doc)
 			{"doze"} {
 				this.parseMethod(string);
-			} 
+			}
 			{"perk"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"nap"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"shake"}{
 				this.parseMethod(string);
@@ -892,9 +966,6 @@ XiiLang {
 			{"remove"}{
 				this.parseMethod(string);
 			}
-			{"slide"}{
-				this.parseMethod(string);
-			}
 			{">shift"}{
 				this.parseMethod(string);
 			}
@@ -909,7 +980,7 @@ XiiLang {
 			}
 			{"revert"}{
 				this.parseMethod(string);
-			} 
+			}
 			{"up"}{
 				this.parseMethod(string);
 			}
@@ -920,66 +991,50 @@ XiiLang {
 				this.parseMethod(string);
 			}
 			{"order"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"hash"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"beer"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"coffee"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"LSD"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"detox"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			// scheme-like verbs
 			{"+"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"-"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"*"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"/"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"!"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"("}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"<"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"^"}{
-				this.parseMethod(string);			
+				this.parseMethod(string);
 			}
 			{"@"}{
-				this.parseMethod(string, return);			
-			}
-			{"rumba1"}{
-				doc.string = doc.string ++ "\ntempo 90
-dig -> |e  e  e e ee ee |";
-			}
-			{"rumba2"}{
-				doc.string = doc.string ++ "\nscale harmonicMinor
-saraghena -> casp[    6   5       ](1)
-saraghena >> delay >> distort
-";
-			}
-			{"rumba3"}{
-				doc.string = doc.string ++ "\nrumba ->  glass[1 3   11224422  1 3   1122      ]
-rumbab -> glass[              77          775   ]-12
-offbeat -> | ll ll         l|
-";
+				this.parseMethod(string, return);
 			}
 			{"suicide"}{
 				var chance, time, op;
@@ -992,11 +1047,11 @@ offbeat -> | ll ll         l|
 					suicidefork = fork{
 						inf.do({
 						["---  WILL I DIE NOW? ---", "---  HAS IT COME TO AN END?  ---", "---  WHEN WILL I DIE?  ---", "---  MORRISSEY  ---", "---  ACTUALLY, WAIT A MINUTE...  ---", "---  I'VE HAD IT  ---", "---  THIS IS THE END  ---", "---  I'M PATHETIC  ---"].choose.postln;
-						if((chance/100).coin, { 
-							this.opInterpreter("savescore" + ("suicide@"++Date.getDate.stamp.asString)); // save score first 
+						if((chance/100).coin, {
+							this.opInterpreter("savescore" + ("suicide@"++Date.getDate.stamp.asString)); // save score first
 							2.wait;
 							0.exit; // kill supercollider
-						}); 
+						});
 						time.wait;
 						});
 					};
@@ -1033,24 +1088,24 @@ offbeat -> | ll ll         l|
 
 				xiilang = XiiLang.new(initargs[0], initargs[1], initargs[2], true, initargs[4], numChannels: numChan);
 				xiilang.doc.name_("ixi lang coder");
-				xiilang.doc.keyDownAction_({| thisdoc, char, mod, unicode, keycode | 
+				xiilang.doc.keyDownAction_({| thisdoc, char, mod, unicode, keycode |
 					var linenr, string;
 					if((mod & 524288 == 524288) && ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)), {
 						linenr = thisdoc.string[..thisdoc.selectionStart-1].split($\n).size;
 						thisdoc.selectLine(linenr);
 						string = thisdoc.selectedString;
-						if(keycode==123, { // not 124, 125, 
+						if(keycode==123, { // not 124, 125,
 							xiilang.freeAgent(string);
 						}, {
 							xiilang.opInterpreter(string);
-						});				
+						});
 					});
-					// here adding what the coder is about 
+					// here adding what the coder is about
 					if(char.isAlpha, {
 						Synth(instrDict[char.asSymbol], [\freq, 60.midicps]); // original
 					});
 				});
-			}			
+			}
 			{"twitter"}{
 				var xiilang, tweetDict, getTweets, currentLine, newLines, routine;
 				xiilang = XiiLang.new(initargs[0], initargs[1], initargs[2], true, initargs[4]);
@@ -1059,16 +1114,16 @@ offbeat -> | ll ll         l|
 				tweetDict = ();
 				currentLine = 1; // one empty line at the top
 				newLines = 0;
-				
+
 				// TODO: unixCmd to start moai main.lua
-				 
+
 				getTweets = {
 					var file, string, allLineBreaks, newdocstring;
 					file = File("/Users/thor/quaziir/mobilecoding/moai-sdk/thor/ixiTwitter/ixitweets","r");
 					string = file.readAllString;
 					file.close;
 					string = string.replace("#ixilang", "");
-					//string = string.replace("   ","");	
+					//string = string.replace("   ","");
 					allLineBreaks = string.findAll("\n");
 					newdocstring = xiilang.doc.string;
 					newLines = 0;
@@ -1100,23 +1155,23 @@ offbeat -> | ll ll         l|
 					}.fork(AppClock);
 					//Post << tweetDict;
 				};
-				
+
 				routine = {{
 					getTweets.value;
 					5.wait;
 				}.loop}.fork(AppClock);
-				
 
-			}			
+
+			}
 			{"autocode"}{
 				var agent, mode, instrument, score, line, charloc, cursorPos, density, lines, spaces, nextline;
-				
+
 				string = string.replace("    ", " ");
 				string = string.replace("   ", " ");
 				string = string.replace("  ", " ");
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 //				[\firstspace, string.findAll(" ")[0]].postln;
-//				[\endspace, string.findAll(" ")[1]].postln; 
+//				[\endspace, string.findAll(" ")[1]].postln;
 //				charloc = doc.selectedRangeLocation;
 				spaces = doc.string.findAll(" ");
 			//	nextline = if(spaces.indexOfGreaterThan(charloc).isNil, {
@@ -1125,16 +1180,16 @@ offbeat -> | ll ll         l|
 //						spaces[spaces.indexOfGreaterThan(charloc)];
 //					});
 //				charloc = nextline;
-//			
+//
 			//	charloc = spaces[spaces.indexOfGreaterThan(charloc)-1];
 				charloc = doc.selectionStart;
-				
+
 				//charloc = string.findAll(" ")[1]+1;
-				{doc.insertTextRange("\n", charloc, 0)}.defer; 
+				{doc.insertTextRange("\n", charloc, 0)}.defer;
 				lines = "";
 				string.collect({arg char; if(char.isDecDigit, { lines = lines++char }) });
 				lines = lines.asInteger;
-				{	
+				{
 					lines.do({
 						mode = [0,1,2].wchoose([0.5, 0.35, 0.15]);
 						agent = "abcdefghijklmnopqrstuvxyzaeyiuxz".scramble[0..(2+(4.rand))];
@@ -1170,9 +1225,9 @@ offbeat -> | ll ll         l|
 								score = instrument++"{"++score++"}";
 								line = agent+"->"+score+"\n";
 							};
-						line.do({arg char, i; 
-							charloc = charloc + 1; 
-							{doc.insertTextRange(char.asString, charloc, 0)}.defer; 
+						line.do({arg char, i;
+							charloc = charloc + 1;
+							{doc.insertTextRange(char.asString, charloc, 0)}.defer;
 							[0.1, 0.05, 0.5].wchoose([0.5, 0.4, 0.1]).wait;
 						});
 						1.wait;
@@ -1195,11 +1250,11 @@ offbeat -> | ll ll         l|
 				string = string.replace("  ", " ");
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 				sessionstart = string.findAll(" ")[0];
-				sessionend = string.findAll(" ")[1]; 
+				sessionend = string.findAll(" ")[1];
 				session = string[sessionstart+1..sessionend-1];
 				offsettime = scoreArray[0][0];
 				scoreArray = scoreArray.collect({arg event; [event[0]-offsettime, event[1]]});
-				[randomseed, scoreArray.copy].writeArchive("ixilang/"++projectname++"/scores/"++session++".scr");
+				[randomseed, scoreArray.copy].writeArchive(Platform.userAppSupportDir ++"/ixilang/"++projectname++"/scores/"++session++".scr");
 			}
 			{"playscore"}{
 				var sessionstart, sessionend, session, variation, varstart, varend, score, offsettime;
@@ -1209,7 +1264,7 @@ offbeat -> | ll ll         l|
 				string = string.replace("  ", " ");
 				string = string++" "; // add a space in order to find end of agent (if no argument)
 				sessionstart = string.findAll(" ")[0];
-				sessionend = string.findAll(" ")[1]; 
+				sessionend = string.findAll(" ")[1];
 				session = string[sessionstart+1..sessionend-1];
 				if(string.findAll(" ")[2].isNil.not, {
 					varstart = string.findAll(" ")[1];
@@ -1217,7 +1272,7 @@ offbeat -> | ll ll         l|
 					variation = string[varstart+1..varend-1];
 				});
 				//doc.onClose; // call this to end all agents and groups in this particular doc if it has been running agents
-				#randomseed, score = Object.readArchive("ixilang/"++projectname++"/scores/"++session++".scr");
+				#randomseed, score = Object.readArchive(Platform.userAppSupportDir ++"/ixilang/"++projectname++"/scores/"++session++".scr");
 				if(variation.isNil.not, { randomseed = variation.ascii.pyramid.pyramid.sum; "playing variation: %".postf(variation) }); // overwrite the orig seed to get a variation
 				XiiLang.new( projectname, key, true, false, language, nil, [randomseed, score]);
 			}
@@ -1228,18 +1283,18 @@ offbeat -> | ll ll         l|
 			}
 			;
 		}
-	
+
 	playScore{ arg score;
 		var offsettime;
 		offsettime = score[0][0];
 		doc.string = "";
-		doc.onClose;
-		{	
+		win.onClose;
+		{
 		//	thisThread.randSeed = randomseed;
 			score.do({ arg event;
 				(event[0]-offsettime).wait;
 				//(1).wait;
-				if(	event[1].contains("future").not && 
+				if(	event[1].contains("future").not &&
 					event[1].contains("snapshot").not &&
 					event[1].contains("suicide").not &&
 					event[1].contains("savescore").not, {
@@ -1260,14 +1315,14 @@ offbeat -> | ll ll         l|
 		splitloc = string.find("->");
 		agent = string[0..splitloc-1]; // get the name of the agent
 		agent = (docnum.asString++agent).asSymbol;
-		
+
 		recursionfunc = {arg subagent;
 				if(groups[subagent].isNil.not, {
 			//		"---- The subagent is a group. Name : ".post; subagent.postln;
-					groups[subagent].do({arg agent; 
-			//			"GROUP AGENT recursing : ".post; agent.postln; 
+					groups[subagent].do({arg agent;
+			//			"GROUP AGENT recursing : ".post; agent.postln;
 				 		recursionfunc.value((docnum.asString++agent).asSymbol); // recursion
-					}); 
+					});
 				}, {
 			//		"FREEING AGENT : ".post; subagent.postln;
 					proxyspace[subagent.asSymbol].clear;
@@ -1277,7 +1332,7 @@ offbeat -> | ll ll         l|
 
 		if(metaAgentDict[agent].isNil.not, {
 			// "This is the agent : ".post; agent.post; " ... and here are the subagents:".post; metaAgentDict[agent].agents.postln;
-			
+
 			metaAgentDict[agent].agents.do({arg subagent;
 				if(groups[subagent].isNil.not, {
 					recursionfunc.value(subagent);
@@ -1293,9 +1348,9 @@ offbeat -> | ll ll         l|
 		agentDict[agent] = nil;
 		metaAgentDict[agent] = nil;
 
-		{doc.stringColor_(deadcolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // killed code is red
+		{doc.setStringColor(deadcolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // killed code is red
 	}
-	
+
 	interpret { arg cmd;
 		// used for debugging from ixi lang doc
 		cmd.interpret;
@@ -1320,7 +1375,7 @@ offbeat -> | ll ll         l|
 			splitloc = string.find(" ");
 			snapshotname = string[splitloc+1 .. string.size-1];
 			agentDICT = snapshotDict[snapshotname.asSymbol]; // a local variable of a snapshot agent dictionary (not the global one)
-			
+
 			if(agentDICT.isNil, {
 				" --->   ixi lang: there is no snapshot with that name!".postln;
 			}, {
@@ -1335,12 +1390,14 @@ offbeat -> | ll ll         l|
 					if(agentDICT[agent].isNil, {
 						agentDict[agent][1].playstate = false;
 						Pdef(agent).stop; // new
-						proxyspace[agent].stop; 
+						proxyspace[agent].stop;
 						// proxyspace[agent].objects[0].array[0].mute;
-						allreturns = doc.string.findAll("\n");
+								allreturns = doc.string.findAll("\n") ++ doc.string.findAll(""++13.asAscii);
 						// the following checks if it's exactly the same agent name (and not confusing joe and joel)
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
-						doc.stringColor_(offcolor, stringstart, stringend-stringstart);
+								(stringend.notNil && stringstart.notNil).if({
+						doc.setStringColor(offcolor, stringstart, stringend-stringstart);
+								});
 					});
 				});
 				// then run the agents in the snapshot and replace strings in doc
@@ -1348,11 +1405,11 @@ offbeat -> | ll ll         l|
 					var allreturns, stringstart, stringend, thisline, agentname, pureagentname, dictscore, mode, cursorPos;
 					agentname = keyagentname.asString;
 					pureagentname = agentname[1..agentname.size-1];
-	
+
 					// --  0)  Check if the agent is playing or not in that snapshot (and not play agents which have ended)
 					if((agentDictItem[1].playstate == true) , {
 						// --  1)  Find the agent in the doc
-						allreturns = doc.string.findAll("\n");
+						allreturns = doc.string.findAll("\n") ++ doc.string.findAll(""++13.asAscii);
 						// the following checks if it's exactly the same agent name (and not confusing joe and joel)
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
 						thisline = doc.string[stringstart..stringend];
@@ -1361,19 +1418,20 @@ offbeat -> | ll ll         l|
 
 						// --  2)  Swap the string in the doc
 						// either with the simple swap
+								(stringend.notNil && stringstart.notNil).if({
 						doc.string_( dictscore, stringstart, stringend-stringstart); // this one keeps text colour
-						doc.stringColor_(oncolor, stringstart, stringend-stringstart);
-
+						doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+								});
 						// --  3)  Run the code (parse it) - IF playstate is true (in case it's been dozed)
 						try{ // try, because if loading from "load", then there will be no proxyspace yet
 							if(proxyspace[keyagentname].objects[0].array[0].muteCount == 1, {
 							proxyspace[keyagentname].objects[0].array[0].unmute;
 						});
 						};
-	
-						mode = block{|break| 
+
+						mode = block{|break|
 							["|", "[", "{", "~", ")"].do({arg op, i;									var c = dictscore.find(op);
-								if(c.isNil.not, {break.value(i)}); 
+								if(c.isNil.not, {break.value(i)});
 							});
 						};
 
@@ -1383,22 +1441,24 @@ offbeat -> | ll ll         l|
 							{2} { proxyspace[keyagentname].play; this.parseScoreMode2(dictscore, false, true) }
 							{3} { proxyspace[keyagentname].play; this.opInterpreter( dictscore, false, true ) };
 						//proxyspace[keyagentname].play;
-						scoreArray = scoreArray.add([Main.elapsedTime, dictscore]); 
+						scoreArray = scoreArray.add([Main.elapsedTime, dictscore]);
 
 						// --  4)  Set the effects that were active when the snapshot was taken
-						
+
 						10.do({arg i; proxyspace[keyagentname][i+1] =  nil }); // remove all effects (10 max) (+1, as 0 is Pdef)
 
-						agentDICT[keyagentname][0].keys.do({arg key, i; 
+						agentDICT[keyagentname][0].keys.do({arg key, i;
 							proxyspace[keyagentname][i+1] = \filter -> effectDict[key.asSymbol];
-							scoreArray = scoreArray.add([Main.elapsedTime, pureagentname + ">>" + key]); 
+							scoreArray = scoreArray.add([Main.elapsedTime, pureagentname + ">>" + key]);
 						});
 
 					}, { // agent is not playing in the snapshot
 						Pdef(keyagentname).stop; // new
 						proxyspace[keyagentname].stop;
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
-						doc.stringColor_(offcolor, stringstart, stringend-stringstart);
+									(stringend.notNil && stringstart.notNil).if({
+						doc.setStringColor(offcolor, stringstart, stringend-stringstart);
+									})
 					});
 				});
 			});
@@ -1417,13 +1477,13 @@ offbeat -> | ll ll         l|
 		argDict[\transposition] = 0;
 		argDict[\silences] = 0;
 		argDict[\repeats] = inf;
-		
+
 		postfixstring.do({arg char, i;
 			var timestretch, transposition, silences, repeats;
 			if( (char==$*) || (char==$/), {
 				timestretch = "";
 				block{|break|
-					postfixstring[i+1..postfixstring.size-1].do({arg item; 
+					postfixstring[i+1..postfixstring.size-1].do({arg item;
 						if((item.isAlphaNum) || (item == $.), {timestretch = timestretch ++ item }, {break.value});
 					});
 				};
@@ -1434,7 +1494,7 @@ offbeat -> | ll ll         l|
 			if( (char==$+) || (char==$-), {
 				transposition = "";
 				block{|break|
-					postfixstring[i+1..postfixstring.size-1].do({arg item; 
+					postfixstring[i+1..postfixstring.size-1].do({arg item;
 						if(item.isAlphaNum || (item == $.), {transposition = transposition ++ item }, {break.value});
 					});
 				};
@@ -1445,7 +1505,7 @@ offbeat -> | ll ll         l|
 			if( char==$!, {
 				silences = "";
 				block{|break|
-					postfixstring[i+1..postfixstring.size-1].do({arg item; 
+					postfixstring[i+1..postfixstring.size-1].do({arg item;
 						if(item.isAlphaNum, {silences = silences ++ item }, {break.value});
 					});
 				};
@@ -1454,14 +1514,14 @@ offbeat -> | ll ll         l|
 			if( char==$@, {
 				repeats = "";
 				block{|break|
-					postfixstring[i+1..postfixstring.size-1].do({arg item; 
+					postfixstring[i+1..postfixstring.size-1].do({arg item;
 						if(item.isAlphaNum, {repeats = repeats ++ item }, {break.value});
 					});
 				};
 				argDict[\repeats] = repeats.asInteger;
 			});
 		});
-		
+
 		// -- sustain --
 		sustainstartloc = postfixstring.find("(");
 		sustainendloc = postfixstring.find(")");
@@ -1480,10 +1540,10 @@ offbeat -> | ll ll         l|
 			if(durint == 0, {durint = 1}); // make sure durint is not 0 - which will crash the language
 			sustainarr = sustainarr.add(durint.reciprocal);
 		});
-		
+
 		sustainarr = sustainarr*multiplication;
 		argDict.add(\sustainarr -> sustainarr);
-		
+
 		// -- attack --
 		attacksymbols = postfixstring.findAll("^");
 		if(attacksymbols.isNil, {
@@ -1493,7 +1553,7 @@ offbeat -> | ll ll         l|
 			attackendloc = attacksymbols[1];
 			attackstring = postfixstring[attackstartloc+1..attackendloc-1];
 		});
-		attackstring.do({arg att; 
+		attackstring.do({arg att;
 			attackarr = attackarr.add(att.asString.asInteger/9); // values range from 0 to 1.0
 		 });
 		argDict.add(\attackarr -> attackarr);
@@ -1508,7 +1568,7 @@ offbeat -> | ll ll         l|
 			panstring = postfixstring[panstartloc+1..panendloc-1];
 		});
 		panstring.do({arg pan;
-			if(numChan == 2, { 
+			if(numChan == 2, {
 				panarr = panarr.add(pan.asString.asInteger.linlin(1, 9, -1, 1)); // 1 to 9 are mapped to panning of -1.0 to 1.0 (Pan2)
 			}, {
 				panarr = panarr.add(pan.asString.asInteger.linlin(1, 9, 0, 2 - (2/numChan))); // 1 to 9 are mapped to panning of 0 - (2 - (2/numChan)) (PanAz)
@@ -1519,7 +1579,7 @@ offbeat -> | ll ll         l|
 	}
 
 	// PERCUSSIVE MODE
-	parseScoreMode0 {arg string, return, snapshot=false; 
+	parseScoreMode0 {arg string, return, snapshot=false;
 		var agent, pureagent, score, splitloc, endchar, agentstring, silenceicon, silences, scorestring, timestretch=1, postfixargs;
 		var durarr, notearr, sustainarr, spacecount, instrarr, instrstring, quantphase, empty, outbus;
 		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, panarr, transposition, repeats;
@@ -1527,14 +1587,14 @@ offbeat -> | ll ll         l|
 		var newInstrFlag = false;
 		var postfixArgDict;
 		var prestring, scorestartloc, morphmode;
-		
+
 		scorestring = string.reject({arg char; char.ascii == 10 }); // to store in agentDict
 		scorestartloc = string.find("|");
 		prestring = string[0..scorestartloc-1].tr($ , \); // get rid of spaces until score
 		splitloc = prestring.find("->");
 		agent = prestring[0..splitloc-1]; // get the name of the agent
 		pureagent = agent;
-		
+
 		morphmode = prestring[splitloc+2..prestring.size];
 		if(morphmode.size < 1, { morphmode = nil });
 
@@ -1552,25 +1612,25 @@ offbeat -> | ll ll         l|
 		transposition = postfixArgDict.transposition;
 		repeats = postfixArgDict.repeats;
 		notearr = [60+transposition];
-		
+
 		score = score[0..endchar-1]; // get rid of the function marker
 		agent = (docnum.asString++agent).asSymbol;
-		
-		// -- create a new agent if needed 
+
+		// -- create a new agent if needed
 		if(agentDict[agent].isNil, {
 			agentDict[agent] = [(), ().add(\amp->0.5), []];
 		}, {
 			if(agentDict[agent][1].scorestring.contains("{"), { newInstrFlag = true }); // trick to free if the agent was { instr (Pmono is always on)
 		}); // 1st = effectRegistryDict, 2nd = scoreInfoDict, 3rd = placeholder for a routine
-				
+
 		// ------------- the instrument -------------------
 		instrstring = score.tr($ , \).tr($., \);
 		instrarr = [];
 		instrstring.collect({arg instr, i; instrarr = instrarr.add(instrDict[instr.asSymbol]) });
 
 		// -------------    the score   -------------------
-		quantphase=0;	
-		spacecount = 0; 
+		quantphase=0;
+		spacecount = 0;
 		durarr = [];
 		score.do({arg char, i;
 			if(((char==$ ) || (char==$.)) && (i==0), { startWempty = true; });
@@ -1579,11 +1639,11 @@ offbeat -> | ll ll         l|
 			}, {
 				if(i != 0, { // not adding the the first instr
 					durarr = durarr.add(spacecount+1); // adding to dur array + include the instr char
-					spacecount = 0; 
-				}); 
+					spacecount = 0;
+				});
 			});
 			if(i==(score.size-1), { // fixing at the end of the loop
-				durarr = durarr.add(spacecount+1); 
+				durarr = durarr.add(spacecount+1);
 				if(startWempty, {
 					quantphase = (durarr[0]-1)/4;
 					empty = durarr.removeAt(0)-1; // minus the added instr (since we're only interested in spaces)
@@ -1595,7 +1655,7 @@ offbeat -> | ll ll         l|
 		durarr[durarr.size-1] = durarr.last+silences; // adding silences to the end of the score
 		durarr = durarr/4;
 		durarr = durarr*timestretch; // duration is stretched by timestretch var
-		
+
 		agentDict[agent][1].mode = 0;
 		agentDict[agent][1].morphmode = morphmode;
 		agentDict[agent][1].quantphase = quantphase;
@@ -1610,11 +1670,11 @@ offbeat -> | ll ll         l|
 		agentDict[agent][1].scorestring = scorestring.asCompileString;
 		agentDict[agent][1].instrument = "rhythmtrack";
 
-		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
+		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Percussive Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		^this.playScoreMode0(agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode, repeats, return, snapshot); 
-	}	
-	
+		^this.playScoreMode0(agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode, repeats, return, snapshot);
+	}
+
 	// MELODIC MODE
 	parseScoreMode1 {arg string, return, snapshot=false;
 		var agent, pureagent, score, scorestartloc, splitloc, endchar, agentstring, instrument, instrstring, timestretch=1, transposition=0;
@@ -1625,7 +1685,7 @@ offbeat -> | ll ll         l|
 		var startWempty = false;
 		var channelicon, midichannel;
 		var postfixArgDict;
-		
+
 		channelicon = 0;
 
 		scorestartloc = string.find("[");
@@ -1643,7 +1703,7 @@ offbeat -> | ll ll         l|
 
 		score = string[scorestartloc+1..string.size-1];
 		endchar = score.find("]"); // the index (int) of the end op in the string
-		
+
 		// -- parse the postfix args (after the score)
 		postfixargs = score[endchar+1..score.size-1].tr($ , \); // allowing for spaces
 		postfixArgDict = this.parsePostfixArgs(postfixargs);
@@ -1655,12 +1715,12 @@ offbeat -> | ll ll         l|
 		repeats = postfixArgDict.repeats;
 
 		panarr = postfixArgDict.panarr;
-		
+
 		channelicon = score.find("c");
 		midichannel = if(channelicon.isNil.not, { score[channelicon+1..channelicon+3].asInteger - 1 }, { 0 });
-		
+
 		score = score[0..endchar-1]; // get rid of the function marker
-		
+
 		if(agentDict[agent].isNil, {
 			agentDict[agent] = [(), ().add(\amp->0.5), []];
 		}, {
@@ -1677,7 +1737,7 @@ offbeat -> | ll ll         l|
 				chord = varDict[note.asSymbol];
 				if(chord.isNil, { // if using a chord (item in dict) that does not exist (say x) - to prevent error posting
 					if(note != $. , {notearr = notearr.add('\s') });
-				}, {	
+				}, {
 					notearr = notearr.add(chord);
 				});
 			}, { // it's not a chord but a NOTE
@@ -1690,8 +1750,8 @@ offbeat -> | ll ll         l|
 		notearr = notearr + tonic + transposition; // if added after the score array
 
 		// -------------    the score   -------------------
-		quantphase=0;	
-		spacecount = 0; 
+		quantphase=0;
+		spacecount = 0;
 		durarr = [];
 		score.do({arg char, i;
 			if(((char==$ ) || (char==$.)) && (i==0), { startWempty = true; });
@@ -1700,11 +1760,11 @@ offbeat -> | ll ll         l|
 			}, {
 				if(i != 0, { // not adding the the first instr
 					durarr = durarr.add(spacecount+1); // adding to dur array + include the instr char
-					spacecount = 0; 
-				}); 
+					spacecount = 0;
+				});
 			});
 			if(i==(score.size-1), { // fixing at the end of the loop
-				durarr = durarr.add(spacecount+1); 
+				durarr = durarr.add(spacecount+1);
 				if(startWempty, {
 					quantphase = (durarr[0]-1)/4;
 					empty = durarr.removeAt(0)-1; // minus the added instr (since we're only interested in spaces)
@@ -1713,7 +1773,7 @@ offbeat -> | ll ll         l|
 			});
 		});
 		durarr[durarr.size-1] = durarr.last+silences; // adding silences to the end of the score
-		durarr = durarr/4; 
+		durarr = durarr/4;
 		durarr = durarr*timestretch; // duration is stretched by timestretch var
 
 		agentDict[agent][1].mode = 1;
@@ -1729,11 +1789,11 @@ offbeat -> | ll ll         l|
 		agentDict[agent][1].instrument = instrument;
 		agentDict[agent][1].midichannel = midichannel;
 
-		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
+		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Melodic Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		^this.playScoreMode1(agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel, repeats, return, snapshot); 
+		^this.playScoreMode1(agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel, repeats, return, snapshot);
 		// this has to be below the playscore method
-	}	
+	}
 
 	// CONCRETE MODE
 	parseScoreMode2 {arg string, return, snapshot=false;
@@ -1770,27 +1830,27 @@ offbeat -> | ll ll         l|
 		score = score[0..endchar-1]; // get rid of the function marker
 
 		// due to Pmono not being able to load a new instr, I check if it there is a new one
-		if(agentDict[agent].isNil, { 
+		if(agentDict[agent].isNil, {
 			agentDict[agent] = [(), ().add(\amp->0.5), []];
-		}, {			
-			if(agentDict[agent][1].instrument != instrument, { 
+		}, {
+			if(agentDict[agent][1].instrument != instrument, {
 				newInstrFlag = true;
 			}, {
-			 	newInstrFlag = false; 
-			});	
+			 	newInstrFlag = false;
+			});
 		});  // 1st = effectRegistryDict, 2nd = scoreInfoDict, 3rd = placeholder for a routine
 
 		if(agentDict[agent][1].pitch.isNil.not and: (pitch != agentDict[agent][1].pitch), {
-			newInstrFlag = true;			
+			newInstrFlag = true;
 		});
-		
+
 		// ------------- the envelope amps -------------------
 		ampstring = score.tr($ , \).tr($., \);
 		amparr = [];
 		ampstring.do({arg amp; amparr = amparr.add(amp.asString.asInteger/10) });
 		// -------------    the score   -------------------
-		quantphase=0;	
-		spacecount = 0; 
+		quantphase=0;
+		spacecount = 0;
 		durarr = [];
 		score.do({arg char, i;
 			if(((char==$ ) || (char==$.)) && (i==0), { startWempty = true; });
@@ -1799,11 +1859,11 @@ offbeat -> | ll ll         l|
 			}, {
 				if(i != 0, { // not adding the the first instr
 					durarr = durarr.add(spacecount+1); // adding to dur array + include the instr char
-					spacecount = 0; 
-				}); 
+					spacecount = 0;
+				});
 			});
 			if(i==(score.size-1), { // fixing at the end of the loop
-				durarr = durarr.add(spacecount+1); 
+				durarr = durarr.add(spacecount+1);
 				if(startWempty, {
 					quantphase = (durarr[0]-1)/4;
 					empty = durarr.removeAt(0)-1; // minus the added instr (since we're only interested in spaces)
@@ -1821,21 +1881,21 @@ offbeat -> | ll ll         l|
 		agentDict[agent][1].amparr = amparr;
 		agentDict[agent][1].panarr = panarr;
 		agentDict[agent][1].pitch = pitch;
-		agentDict[agent][1].score = score;		
+		agentDict[agent][1].score = score;
 		agentDict[agent][1].repeats = repeats;
 		agentDict[agent][1].scorestring = string.asCompileString;
 		agentDict[agent][1].instrument = instrument;
 
-		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // if code is green (sleeping)
+		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // if code is green (sleeping)
 		"------    ixi lang: Created Concrete Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		^this.playScoreMode2(agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag, repeats, return, snapshot); 
+		^this.playScoreMode2(agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag, repeats, return, snapshot);
 		// this has to be below the playscore method
-	}	
-	
+	}
+
 	parseChord {arg string, mode;
 		var splitloc, chordstring, chord, varname;
 		var chordstartloc;
-		
+
 		string = string[0..string.size-1].tr($ , \); // get rid of spaces until score
 		splitloc = string.find("->");
 		varname = string[0..splitloc-1]; // get the name of the var
@@ -1843,18 +1903,18 @@ offbeat -> | ll ll         l|
 //		if(mode == \c, {
 //			chordstartloc = string.find("(");
 //		},{
-//			chordstartloc = string.find("±");
+//			chordstartloc = string.find("ï¿½");
 //		});
 		if(varname.interpret.isInteger, { // PERCUSSIVE MODE ------------ NOT WORKING - Pseq(\instrument does not expand)
 			chordstring = string[splitloc+3..string.size-3];
 			chord = [];
 			chordstring.do({arg instr; chord = chord.add(instrDict[instr.asSymbol]) });
-			varDict[varname.asSymbol] = chord; 
+			varDict[varname.asSymbol] = chord;
 		}, { // MELODIC MODE
 			if(mode == \c, {
 				chordstring = string[splitloc+3..string.size-2];
 				chord = [];
-				chordstring.do({arg note; 
+				chordstring.do({arg note;
 					if(note.isAlpha, {
 						chord = chord.add(varDict[note.asSymbol]);
 					},{
@@ -1867,15 +1927,15 @@ offbeat -> | ll ll         l|
 				varDict[varname.asSymbol] = chordstring.asInteger;
 			});
 		});
-	}	
+	}
 
 	createMetaAgent {arg string;
 		var splitloc, patternstring, chord, agentname, agent, groupitems, mode;
-		var agentarray, tempstring, seq, quant, durarr; 
+		var agentarray, tempstring, seq, quant, durarr;
 		var repeats = inf;
 		var stringstart, stringend, postfixargs, postfixArgDict, endchar;
 		var thisline, activeAgentArray;
-		
+
 		splitloc = string.find("->");
 		agentname = string[0..splitloc-1]; // get the name of the var
 		agentname = agentname.tr($ , \);
@@ -1883,7 +1943,7 @@ offbeat -> | ll ll         l|
 		patternstring = string[splitloc+3..string.size-2].tr($ , $-);
 		agentarray = [];
 		tempstring = "";
-		patternstring.do({arg char; 
+		patternstring.do({arg char;
 			if((char != $-) && (char != $~), {
 				tempstring = tempstring ++ char;
 			}, {
@@ -1893,7 +1953,7 @@ offbeat -> | ll ll         l|
 				});
 			});
 		});
-		
+
 		endchar = string.findAll("~"); // the index (int) of the end op in the string
 		postfixargs = string[endchar[1]+1..string.size-1].tr($ , \); // allowing for spaces
 		postfixArgDict = this.parsePostfixArgs(postfixargs);
@@ -1904,7 +1964,7 @@ offbeat -> | ll ll         l|
 		seq = [];
 		activeAgentArray = [];
 		groupitems = [];
-				
+
 		(agentarray.size/2).do({arg i;
 			var subagent = (docnum.asString++agentarray[i*2].asString).asSymbol; // not the new meta agent but its contents
 			// activeAgentArray = activeAgentArray.add(agentname);
@@ -1921,7 +1981,7 @@ offbeat -> | ll ll         l|
 
 			groupitems = groupitems.add(agentarray[i*2].asString);
 			//this.opInterpreter("@" + agentarray[i*2].asString + agentarray[(i*2)+1], true);
-			proxyspace[subagent].clear(0.01);	
+			proxyspace[subagent].clear(0.01);
 			seq = seq.add(
 				switch(mode)
 				{0} {
@@ -1938,7 +1998,7 @@ offbeat -> | ll ll         l|
 					durarr = agentDict[subagent][1].durarr;
 					this.opInterpreter("@" + agentarray[i*2].asString + agentarray[(i*2)+1], true);
 					this.opInterpreter( agentDict[subagent][1].scorestring.tr($",\ ), true );}
-				{3} { // meta agent 
+				{3} { // meta agent
 					durarr = agentDict[subagent][1].durarr;
 					Pdef(subagent).source.repeats = agentarray[(i*2)+1].asInteger; // change the repeats argument of the Pseq
 					Pdef(subagent);
@@ -1955,7 +2015,7 @@ offbeat -> | ll ll         l|
 				};
 			);
 		});
-		
+
 		groups.add(agent -> groupitems);
 
 		// -- set the general quant argument (from the first agent in a metaagent)
@@ -1963,7 +2023,7 @@ offbeat -> | ll ll         l|
 //			metaAgentDict.add(\quant -> quant);
 //		});
 
-		// -- create a new agent if needed 
+		// -- create a new agent if needed
 		if(agentDict[agent].isNil, {
 			agentDict[agent] = [(), ().add(\amp -> 0.5), []];
 		});
@@ -1971,41 +2031,41 @@ offbeat -> | ll ll         l|
 		if(metaAgentDict[agent].isNil, {
 			metaAgentDict[agent] = ().add(\quant -> quant).add(\agents -> activeAgentArray);
 		});
-		
+
 		agentDict[agent][1].mode = 3;
 	//	agentDict[agent][1].durarr = agentDict[(docnum.asString++agentarray[0].asString).asSymbol][1].durarr;
 		agentDict[agent][1].durarr = durarr;
 		agentDict[agent][1].instrument = "metatrack";
 		agentDict[agent][1].scorestring = string;
 		agentDict[agent][1].playstate = true;
-		
+
 		Pdef(agent, Pseq(seq, repeats)); //.quant = [quant, 0];
-		
+
 		proxyspace[agent].quant = [quant, 0];
 		proxyspace[agent] = Pdef(agent);
 		proxyspace[agent].play;
 
-	} 
+	}
 
 	playScoreMode0 {arg agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode, repeats, return, snapshot;
 		var loop, pdef, playNow;
 		playNow = return.not; // if returning, then don't play
-		
+
 		if(snapshot.not, {
 		metaAgentDict.do({arg metaagent;
 			// if the agent is part of a metaAgent it is not played (so we can do "shake ringo", etc. without it being played)
 			try{metaagent.agents.do({arg agentindict; if(agentindict == agent, {playNow = false }) })};
 		});
-		
+
 		// experimental
 //		groups.do({arg group;
 //			// if the agent is part of a metaAgent it is not played (so we can do "shake ringo", etc. without it being played)
 //			try{group.do({arg agentname; "agentName ".post; if((docnum.asString++agentname.asString).asSymbol == agent, { playNow = false }) })};
 //		});
 		});
-		
+
 		if(snapshot, { playNow = true });
-	
+
 		if(morphmode.isNil, {
 			// ------------ play function --------------
 			if(proxyspace[agent].isNeutral || (repeats != inf), { // check if the object exists already
@@ -2013,8 +2073,8 @@ offbeat -> | ll ll         l|
 				10.do({arg i; proxyspace[agent][i+1] =  nil }); // oh dear. Proxyspace forces this, as one might want to put an effect again on a repeat pat
 				agentDict[agent][0].clear; // clear the effect references
 				pdef = Pdef(agent, Pbind(
-							\instrument, Pseq(instrarr, inf), 
-							\midinote, Pseq(notearr, inf), 
+							\instrument, Pseq(instrarr, inf),
+							\midinote, Pseq(notearr, inf),
 							\dur, Pseq(durarr, repeats),
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\sustain, Pseq(sustainarr, inf),
@@ -2030,8 +2090,8 @@ offbeat -> | ll ll         l|
 				if(newInstrFlag, { // only if instrument was {, where Pmono bufferplayer synthdef needs to be shut down (similar to above, but no freeing of effects)
 					proxyspace[agent].free; // needed in order to swap instrument in Pmono
 					pdef = Pdef(agent, Pbind(
-								\instrument, Pseq(instrarr, inf), 
-								\midinote, Pseq(notearr, inf), 
+								\instrument, Pseq(instrarr, inf),
+								\midinote, Pseq(notearr, inf),
 								\dur, Pseq(durarr, repeats),
 								\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 								\sustain, Pseq(sustainarr, inf),
@@ -2040,11 +2100,11 @@ offbeat -> | ll ll         l|
 					if(playNow, {
 						{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 					});
-				}, {	
+				}, {
 					// default behavior
 					pdef = Pdef(agent, Pbind(
-								\instrument, Pseq(instrarr, inf), 
-								\midinote, Pseq(notearr, inf), 
+								\instrument, Pseq(instrarr, inf),
+								\midinote, Pseq(notearr, inf),
 								\dur, Pseq(durarr, repeats),
 								\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 								\sustain, Pseq(sustainarr, inf),
@@ -2060,23 +2120,23 @@ offbeat -> | ll ll         l|
 		}, {
 			if(morphmode.contains("%"), { morphmode = morphmode.tr($%, \); loop = true }, { loop = false }); // check if there is a loop arg or not
 			// ------------ play function --------------
-			instrarr = instrarr.collect({arg instrname; 
+			instrarr = instrarr.collect({arg instrname;
 				if(ixiInstr.returnBufferDict[instrname.asSymbol].isNil, {
 					ixiInstr.returnBufferDict.choose; // if there is a synthesis synth, we have to ignore and we choose ANY buffer instead
 				}, {
 					ixiInstr.returnBufferDict[instrname.asSymbol];
-				}) 
+				})
 			});
 			if(proxyspace[agent].isNeutral || (repeats != inf), { // check if the object exists alreay
 				proxyspace[agent].free; // needed because of repeats (free proxyspace timing)
 				10.do({arg i; proxyspace[agent][i+1] =  nil }); // oh dear. Proxyspace forces this, as one might want to put an effect again on a repeat pat
 				agentDict[agent][0].clear; // clear the effect references
 				pdef = Pdef(agent, Pbind(
-							\instrument, morphmode.asSymbol, 
+							\instrument, morphmode.asSymbol,
 							\loop, loop,
 							\buf1, Pseq(instrarr, inf),
 							\buf2, Pseq(instrarr.rotate(-1), inf),
-							\midinote, Pseq(notearr, inf), 
+							\midinote, Pseq(notearr, inf),
 							\dur, Pseq(durarr, repeats),
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
@@ -2094,11 +2154,11 @@ offbeat -> | ll ll         l|
 				if(newInstrFlag, { // only if instrument was {, where Pmono bufferplayer synthdef needs to be shut down (similar to above, but no freeing of effects)
 					proxyspace[agent].free; // needed in order to swap instrument in Pmono
 					pdef = Pdef(agent, Pbind(
-							\instrument, morphmode.asSymbol, 
+							\instrument, morphmode.asSymbol,
 							\loop, loop,
 							\buf1, Pseq(instrarr, inf),
 							\buf2, Pseq(instrarr.rotate(-1), inf),
-							\midinote, Pseq(notearr, inf), 
+							\midinote, Pseq(notearr, inf),
 							\dur, Pseq(durarr, repeats),
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
@@ -2112,11 +2172,11 @@ offbeat -> | ll ll         l|
 					});
 				}, {	// default behavior
 					pdef = Pdef(agent, Pbind(
-							\instrument, morphmode.asSymbol, 
+							\instrument, morphmode.asSymbol,
 							\loop, loop,
 							\buf1, Pseq(instrarr, inf),
 							\buf2, Pseq(instrarr.rotate(-1), inf),
-							\midinote, Pseq(notearr, inf), 
+							\midinote, Pseq(notearr, inf),
 							\dur, Pseq(durarr, repeats),
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
@@ -2136,7 +2196,7 @@ offbeat -> | ll ll         l|
 		agentDict[agent][1].playstate = true;
 		if(return, {^pdef});
 	}
-	
+
 	playScoreMode1 {arg agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel=0, repeats, return, snapshot;
 		var pdef, playNow;
 		playNow = return.not; // if returning, then don't play
@@ -2153,7 +2213,7 @@ offbeat -> | ll ll         l|
 		});
 		if(snapshot, { playNow = true });
 		if(instrument.asString=="midi", { eventtype = \midi }, { eventtype = \note });
-		
+
 		// ------------ play function --------------
 		if(proxyspace[agent].isNeutral || (repeats != inf), { // check if the object exists alreay
 			proxyspace[agent].free; // needed because of repeats (free proxyspace timing)
@@ -2164,7 +2224,7 @@ offbeat -> | ll ll         l|
 						\type, eventtype,
 						\midiout, midiclient,
 						\chan, midichannel,
-						\midinote, Pseq(notearr, inf), 
+						\midinote, Pseq(notearr, inf),
 						\dur, Pseq(durarr, repeats),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
@@ -2184,7 +2244,7 @@ offbeat -> | ll ll         l|
 						\type, eventtype,
 						\midiout, midiclient,
 						\chan, midichannel,
-						\midinote, Pseq(notearr, inf), 
+						\midinote, Pseq(notearr, inf),
 						\dur, Pseq(durarr, repeats),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
@@ -2194,21 +2254,21 @@ offbeat -> | ll ll         l|
 					proxyspace[agent].defineBus(numChannels: numChan);
 					{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 				});
-			}, { 
+			}, {
 				// default behavior
 				pdef = Pdef(agent, Pbind(
 						\instrument, instrument,
 						\type, eventtype,
 						\midiout, midiclient,
 						\chan, midichannel,
-						\midinote, Pseq(notearr, inf), 
+						\midinote, Pseq(notearr, inf),
 						\dur, Pseq(durarr, repeats),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 						\pan, Pseq(panarr, inf)
 				)).quant = [durarr.sum, quantphase, 0, 1];
 					//proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
-				if(playNow, {					
+				if(playNow, {
 					if(agentDict[agent][1].playstate == false, {
 						proxyspace[agent].defineBus(numChannels: numChan);
 						proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
@@ -2234,10 +2294,10 @@ offbeat -> | ll ll         l|
 //			try{group.do({arg agentname; "agentName ".post; if((docnum.asString++agentname.asString).asSymbol == agent, { playNow = false }) })};
 //		});
 		});
-		
-		
+
+
 		if(snapshot, { playNow = true });
-		
+
 		// ------------ play function --------------
 		if(proxyspace[agent].isNeutral || (repeats != inf), { // check if the object exists alreay
 			proxyspace[agent].free; // needed because of repeats (free proxyspace timing)
@@ -2286,7 +2346,7 @@ offbeat -> | ll ll         l|
 		effectFoundFlag = false;
 		string = string.tr($ , \); // get rid of spaces
 		string = string.reject({ |c| c.ascii == 10 }); // get rid of char return
-		splitloc = string.findAll(">>");		
+		splitloc = string.findAll(">>");
 		agent = string[0..splitloc[0]-1];
 		pureagent = agent;
 		agent = (docnum.asString++agent).asSymbol;
@@ -2323,9 +2383,9 @@ offbeat -> | ll ll         l|
 				});
 			});
 		});
-		
+
 	}
-	
+
 	removeEffect {arg string;
 		var splitloc, agentstring, endchar, agent, pureagent, effect, effectFoundFlag;
 		effectFoundFlag = false;
@@ -2379,7 +2439,7 @@ offbeat -> | ll ll         l|
 	increaseAmp {arg string;
 		var splitloc, agentstring, endchar, agent, effect, effectFoundFlag, amp, dict;
 		effectFoundFlag = false;
-		if(string.find("))") == 0, { string = string.tr($), \).tr($ ,\) ++ "))"});  // if using the verb-agent structure 
+		if(string.find("))") == 0, { string = string.tr($), \).tr($ ,\) ++ "))"});  // if using the verb-agent structure
 		string = string.tr($ , \); // get rid of spaces
 		splitloc = string.find("))");
 		agentstring = string[0..splitloc-1]; // get the name of the agent
@@ -2390,24 +2450,24 @@ offbeat -> | ll ll         l|
 			groups[agent].do({arg agentx, i;
 				this.increaseAmp(agentx++"))"); // recursive calling of this same method
 			});
-		}, {			
+		}, {
 			amp = agentDict[agent][1].amp;
 			amp = (amp + 0.05).clip(0, 2);
 			(" --->    ixi lang : AMP in agent "++agent.asString++" : ").post; amp.postln;
 			agentDict[agent][1].amp = amp;
 			switch(agentDict[agent][1].mode)
-				{0} { this.playScoreMode0(agent, dict.notearr, dict.durarr, dict.instrarr, dict.sustainarr, dict.attackarr, dict.panarr, 
+				{0} { this.playScoreMode0(agent, dict.notearr, dict.durarr, dict.instrarr, dict.sustainarr, dict.attackarr, dict.panarr,
 					dict.quantphase, false, dict.morphmode, dict.repeats, false, false); }
-				{1} { this.playScoreMode1(agent, dict.notearr, dict.durarr, dict.sustainarr, dict.attackarr, dict.panarr, dict.instrument, 
+				{1} { this.playScoreMode1(agent, dict.notearr, dict.durarr, dict.sustainarr, dict.attackarr, dict.panarr, dict.instrument,
 					dict.quantphase, false, dict.midichannel, dict.repeats, false, false); }
 				{2} { Pdef(agent).set(\amp, amp) };
 		});
 	}
-	
+
 	decreaseAmp {arg string;
 		var splitloc, agentstring, endchar, agent, effect, effectFoundFlag, amp, dict;
 		effectFoundFlag = false;
-		if(string.find("((") == 0, { string = string.tr($(, \).tr($ ,\) ++ "(("}); // if using the verb-agent structure 
+		if(string.find("((") == 0, { string = string.tr($(, \).tr($ ,\) ++ "(("}); // if using the verb-agent structure
 		string = string.tr($ , \); // get rid of spaces
 		splitloc = string.find("((");
 		agentstring = string[0..splitloc-1]; // get the name of the agent
@@ -2424,45 +2484,48 @@ offbeat -> | ll ll         l|
 			(" --->    ixi lang : AMP in agent "++agent.asString++" : ").post; amp.postln;
 			agentDict[agent][1].amp = amp;
 			switch(agentDict[agent][1].mode)
-				{0} { this.playScoreMode0(agent, dict.notearr, dict.durarr, dict.instrarr, dict.sustainarr, dict.attackarr, dict.panarr, 
+				{0} { this.playScoreMode0(agent, dict.notearr, dict.durarr, dict.instrarr, dict.sustainarr, dict.attackarr, dict.panarr,
 					dict.quantphase, false, dict.morphmode, dict.repeats, false, false); }
-				{1} { this.playScoreMode1(agent, dict.notearr, dict.durarr, dict.sustainarr, dict.attackarr, dict.panarr, dict.instrument, 
+				{1} { this.playScoreMode1(agent, dict.notearr, dict.durarr, dict.sustainarr, dict.attackarr, dict.panarr, dict.instrument,
 					dict.quantphase, false, dict.midichannel, dict.repeats, false, false); }
 				{2} { Pdef(agent).set(\amp, amp) };
 		});
 	}
-	
+
 	findStringStartEnd {arg doc, pureagentname;
 		var allreturns, stringstart, stringend, tempstringstart;
-		allreturns = doc.string.findAll("\n");
-		try{block{ | break |
-			doc.string.findAll(pureagentname).do({arg loc, i;
-				stringend = allreturns[allreturns.indexOfGreaterThan(loc)];
-				if(doc.string[(loc+pureagentname.size)..stringend].contains("->"), {
-					tempstringstart = loc; //doc.string.find(pureagentname);
-					if(pureagentname == doc.string[tempstringstart..doc.string.findAll("->")[doc.string.findAll("->").indexOfGreaterThan(tempstringstart+1)]-1].tr($ , \), {
-						// the line below will check if it's the same agent in the dict and on the doc. if so, it changes it (in case there are many with same name)
-						if(agentDict[(docnum.asString++pureagentname.asString).asSymbol][1].scorestring == doc.string[loc..stringend-1].asCompileString, {
-							stringstart = tempstringstart;
-							break.value; //  exact match found and we break loop, leaving stringstart and stringend with correct values
-						});
-					});
-				});
-			});
-		}};
-		// if an EXACT agent score has not been found, then apply the action upon an agent with the same name (can happen if future is running and score is changed)
-		if(stringstart == nil, {
-			block{ | break |
+		allreturns = doc.string.findAll("\n") ++ doc.string.findAll(""++13.asAscii);
+		allreturns.notNil.if({
+			try{block{ | break |
 				doc.string.findAll(pureagentname).do({arg loc, i;
 					stringend = allreturns[allreturns.indexOfGreaterThan(loc)];
 					if(doc.string[(loc+pureagentname.size)..stringend].contains("->"), {
-						stringstart = loc; //doc.string.find(pureagentname);
-						if(pureagentname == doc.string[stringstart..doc.string.findAll("->")[doc.string.findAll("->").indexOfGreaterThan(stringstart+1)]-1].tr($ , \), {
-							break.value; //  exact match found and we break loop, leaving stringstart and stringend with correct values
+						tempstringstart = loc; //doc.string.find(pureagentname);
+						if(pureagentname == doc.string[tempstringstart..doc.string.findAll("->")[doc.string.findAll("->").indexOfGreaterThan(tempstringstart+1)]-1].tr($ , \), {
+							// the line below will check if it's the same agent in the dict and on the doc. if so, it changes it (in case there are many with same name)
+							//stringend.isNil.if({stringend = 0});
+							if(agentDict[(docnum.asString++pureagentname.asString).asSymbol][1].scorestring == doc.string[loc..stringend-1].asCompileString, {
+								stringstart = tempstringstart;
+								break.value; //  exact match found and we break loop, leaving stringstart and stringend with correct values
+							});
 						});
 					});
 				});
-			};
+			}};
+			// if an EXACT agent score has not been found, then apply the action upon an agent with the same name (can happen if future is running and score is changed)
+			if(stringstart == nil, {
+				block{ | break |
+					doc.string.findAll(pureagentname).do({arg loc, i;
+						stringend = allreturns[allreturns.indexOfGreaterThan(loc)];
+						if(doc.string[(loc+pureagentname.size)..stringend].contains("->"), {
+							stringstart = loc; //doc.string.find(pureagentname);
+							if(pureagentname == doc.string[stringstart..doc.string.findAll("->")[doc.string.findAll("->").indexOfGreaterThan(stringstart+1)]-1].tr($ , \), {
+								break.value; //  exact match found and we break loop, leaving stringstart and stringend with correct values
+							});
+						});
+					});
+				};
+			});
 		});
 		^[stringstart, stringend];
 	}
@@ -2473,9 +2536,10 @@ offbeat -> | ll ll         l|
 		var allreturns, stringstart, stringend, cursorPos, modstring, thisline;
 		var scorestringsuffix, argsuffix, scoremode, scorerange, score, agent;
 		var val, end;
+		var newstr;
 		#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
 		thisline = doc.string[stringstart..stringend];
-		
+
 		// TEST XXX (For scheme like methods - e.g.,  + agent 12)
 		// if new argument then add that to the line
 		if(newarg.isNil.not, {
@@ -2483,7 +2547,7 @@ offbeat -> | ll ll         l|
 				if((newarg[0] == "-") , { // ouch - the assignment operator contains a "-" so I need specific rule for subtraction
 					if(thisline.findAll("-").size > 1, {
 						block{|break|
-							thisline[thisline.findAll("-")[1]+1..thisline.size-1].do({arg item, i; 
+							thisline[thisline.findAll("-")[1]+1..thisline.size-1].do({arg item, i;
 								if(item.isAlphaNum || (item == $.), {val = val ++ item }, {end = thisline.findAll("-")[1]+1+i; break.value});
 							});
 						};
@@ -2493,47 +2557,47 @@ offbeat -> | ll ll         l|
 					});
 				}, { // this is the MAIN method for replacing operators (for all but "-" as seen above)
 					block{|break|
-						thisline[thisline.find(newarg[0])+1..thisline.size-1].do({arg item, i; 
+						thisline[thisline.find(newarg[0])+1..thisline.size-1].do({arg item, i;
 							if(item.isAlphaNum || (item == $_) || (item == $.), {val = val ++ item }, {end = thisline.find(newarg[0])+1+i; break.value});
 						});
 					};
-					
-					switch(newarg[0]) 
+
+					switch(newarg[0])
 					{"^"} {
 						thisline = thisline[0..thisline.find(newarg[0])]++newarg[1]++newarg[0]++thisline[end..thisline.size-1]; // ++"\n";
 						thisline = thisline.replace("^^", "^");
-					} 
+					}
 					{"("} {
 						thisline = thisline[0..thisline.find(newarg[0])]++newarg[1]++")"++thisline[end..thisline.size-1]; // ++"\n";
 						thisline = thisline.replace("((", "(").replace("))", ")");
-					} 
+					}
 					{"<"} {
 						thisline = thisline[0..thisline.find(newarg[0])]++newarg[1]++">"++thisline[end..thisline.size-1]; // ++"\n";
 						thisline = thisline.replace("<<", "<").replace(">>", ">");
-					} 
+					}
 					{
 						thisline = thisline[0..thisline.find(newarg[0])]++newarg[1]++thisline[end..thisline.size-1]; // ++"\n";
 					};
 				});
 			},{
-				switch(newarg[0]) 
+				switch(newarg[0])
 					{"^"} {
 						thisline = thisline++newarg[0]++newarg[1]++newarg[0]; // no need to replace an operator, just add to the end
-					} 
+					}
 					{"("} {
 						thisline = thisline++newarg[0]++newarg[1]++")"; // no need to replace an operator, just add to the end
-					} 
+					}
 					{"<"} {
 						thisline = thisline++newarg[0]++newarg[1]++">"; // no need to replace an operator, just add to the end
-					} 
+					}
 					{
 						thisline = thisline++newarg[0]++newarg[1]; // no need to replace an operator, just add to the end
 					};
 			});
 		});
-		
+
 		agent = (docnum.asString++pureagentname).asSymbol;
-		
+
 		if(agentDict.keys.includes(agent), {
 			if(thisline.find("|").isNil.not, {
 				scorerange = thisline.findAll("|");
@@ -2554,7 +2618,7 @@ offbeat -> | ll ll         l|
 				argsuffix = thisline[scorerange[1]+1..thisline.size-1]; // if arguments are added
 				scoremode = 2;
 			});
-			
+
 			if(thisline.find("~").isNil.not, {
 				scorerange = thisline.findAll("~");
 				argsuffix = thisline[scorerange[1]+1..thisline.size-1]; // if arguments are added
@@ -2562,13 +2626,13 @@ offbeat -> | ll ll         l|
 					{ // make agent white again
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
-						doc.stringColor_(oncolor, stringstart, stringend-stringstart);
-						doc.selectRange(cursorPos); // set cursor pos again
+						doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+						//doc.selectRange(cursorPos); // set cursor pos again
 					}.defer;
 			});
-			
+
 			if(modearray[scoremode], { // if this scoremode supports the operation (no need to yoyo a melodic score for example)
-				
+
 				score = thisline[scorerange[0]+1..scorerange[1]-1];
 				scorestringsuffix = switch(scoremode) {0}{"|"++argsuffix}{1}{"]"++argsuffix}{2}{"}"++argsuffix}{3}{"~"++argsuffix};
 				// -------- put it back in place ----------
@@ -2578,40 +2642,52 @@ offbeat -> | ll ll         l|
 					{ // make the agent yellow
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
-						doc.stringColor_(activecolor, stringstart, stringend-stringstart);
-						doc.selectRange(cursorPos); // set cursor pos again
+						(stringend.notNil && stringstart.notNil).if({
+							doc.setStringColor(activecolor, stringstart, stringend-stringstart);
+						});
+						//doc.selectRange(cursorPos); // set cursor pos again
 					}.defer;
 					0.3.wait;
 					{ // swap agent's strings
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
-						
-						doc.string_( modstring, stringstart, stringend-stringstart);
+						(stringend.notNil && stringstart.notNil).if({
+							newstr = doc.string[0..stringstart-1] ++
+							modstring ++
+							doc.string[stringend..doc.string.size];
+							doc.string_(newstr);
+							/*doc.string_( modstring, stringstart, stringend-stringstart);*/
+							//doc.string_(doc.string + "\n" ++ modstring);
+						});
 
+						/*
 						// for methods that change string sizes, it's good to do the below so cursor is placed correctly
 						// if cursorPos < stringend, then the same location, else calcultate new location cf. new string size
 						if(cursorPos<stringend, {
-							doc.selectRange(cursorPos); // set cursor pos again
+							//doc.selectRange(cursorPos); // set cursor pos again
 						}, {
-							doc.selectRange(cursorPos+(modstring.size-(stringend-stringstart))); // set cursor pos again
+							//doc.selectRange(cursorPos+(modstring.size-(stringend-stringstart))); // set cursor pos again
 						});
+						*/
 						switch(scoremode)
 							{0} { if(agentDict[agent][1].playstate, {this.parseScoreMode0(modstring, return)}) }
 							{1} { if(agentDict[agent][1].playstate, {this.parseScoreMode1(modstring, return)}) }
 							{2} { if(agentDict[agent][1].playstate, {this.parseScoreMode2(modstring, return)}) }
 						//	{3} { if(agentDict[agent][1].playstate, {this.parseScoreMode3(modstring, return)}, {this.parseScoreMode3(modstring, return)}) }
-			
+
 					}.defer;
 					0.3.wait;
 					{ // make agent white again
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
-						doc.stringColor_(oncolor, stringstart, stringend-stringstart);
-						doc.selectRange(cursorPos); // set cursor pos again
+						(stringend.notNil && stringstart.notNil).if({
+							doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+						})
+						//doc.selectRange(cursorPos); // set cursor pos again
 					}.defer;
-		
+
 				}.fork(TempoClock.new);
-				
+
 			},{
 				"ixi lang ERROR: Action not applicable in this mode".postln;
 			});
@@ -2624,7 +2700,7 @@ offbeat -> | ll ll         l|
 		var splitloc, methodstring, spaces, agent, method, pureagentname;
 		var thisline, modstring, stringstart, allreturns, stringend, scorerange, score, scoremode, scorestringsuffix;
 		var argument, argsuffix, cursorPos;
-		
+
 		splitloc = string.find(" ");
 		methodstring = string[0..splitloc-1].tr($ , \); // get the name of the agent
 		method = methodstring[0..methodstring.size-1];
@@ -2635,52 +2711,60 @@ offbeat -> | ll ll         l|
 		pureagentname = agent; // the name of the agent is different in code (0john) and in doc (john) (for multidoc support)
 		agent = (docnum.asString++agent).asSymbol;
 		if( spaces.size > 1, { argument = string[spaces[1]..spaces[spaces.size-1]] }); // is there an argument?
-		
+
 
 		// HERE CHECK IF IT'S A GROUP THEN PERFORM A DO LOOP (for each member of the group)
 		if(groups.at(agent).isNil.not, { // the "agent" is a group
 			groups.at(agent).do({arg agentx, i;
 				this.parseMethod(method+agentx+argument); // recursive calling of this method
 			});
-			if(metaAgentDict.at(agent).isNil.not, { // metaagents are always groups as well. 
+			if(metaAgentDict.at(agent).isNil.not, { // metaagents are always groups as well.
 				// Only "doze" and "perk" are relevant for meta agent control
 				// the rest of the methods apply to the sub-agents
 				#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
-				switch(method) 
+				switch(method)
 					{"doze"} {// pause stream
 						if(agentDict[agent][1].playstate == true, {
 							agentDict[agent][1].playstate = false;
 							proxyspace[agent].stop;
-					 		doc.stringColor_(offcolor, stringstart, stringend-stringstart);
+						(stringend.notNil && stringstart.notNil).if({
+							doc.setStringColor(offcolor, stringstart, stringend-stringstart);
+						});
 						});
 					}
 					{"perk"} { // restart stream
 						if(agentDict[agent][1].playstate == false, {
 							agentDict[agent][1].playstate = true;
 							proxyspace[agent].play;
-					 		doc.stringColor_(oncolor, stringstart, stringend-stringstart);
+						(stringend.notNil && stringstart.notNil).if({
+					 		doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+						});
 						});
 					}
 					{"nap"} { // pause for either n secs or n secs:number of times
 						var napdur, separator, times, on, barmode;
 						on = true;
 						separator = argument.find(":");
-	
+
 						if(separator.isNil.not, { // it contains a on/off order
 							napdur = argument[0..separator-1].asFloat;
 							// round to even, so it doesn't leave the stream off
 							times = argument[separator+1..argument.size-1].asInteger.round(2);
 						 	{
-						 		(times*2).do({ // times two as the interface is that it should nap twice 
+						 		(times*2).do({ // times two as the interface is that it should nap twice
 						 			if(on, {
 						 				proxyspace[agent].objects[0].array[0].mute;
 						 				agentDict[agent][1].playstate = false;
-								 		{doc.stringColor_(offcolor, stringstart, stringend-stringstart)}.defer;
+									(stringend.notNil && stringstart.notNil).if({
+								 		{doc.setStringColor(offcolor, stringstart, stringend-stringstart)}.defer;
+									});
 						 				on = false;
 						 			}, {
 						 				proxyspace[agent].objects[0].array[0].unmute;
 										agentDict[agent][1].playstate = true;
-								 		{doc.stringColor_(oncolor, stringstart, stringend-stringstart)}.defer;
+										(stringend.notNil && stringstart.notNil).if({
+											{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+										});
 						 				on = true;
 						 			});
 						 			napdur.wait;
@@ -2690,16 +2774,20 @@ offbeat -> | ll ll         l|
 						 	{
 								napdur = argument.asFloat;
 					 			proxyspace[agent].objects[0].array[0].mute;
-								{doc.stringColor_(offcolor, stringstart, stringend-stringstart)}.defer;
+								(stringend.notNil && stringstart.notNil).if({
+									{doc.setStringColor(offcolor, stringstart, stringend-stringstart)}.defer;
+								});
 								napdur.wait;
 					 			proxyspace[agent].objects[0].array[0].unmute;
-								{doc.stringColor_(oncolor, stringstart, stringend-stringstart)}.defer;
+								(stringend.notNil && stringstart.notNil).if({
+									{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+								});
 						 	}.fork(TempoClock.new);
 					 	});
 					};
 			});
 		}, { // it is a real agent, not a group
-			
+
 			// -------- find the line in the document -----------
 			#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
 
@@ -2732,7 +2820,7 @@ offbeat -> | ll ll         l|
 			scorestringsuffix = switch(scoremode) {0}{"|"++argsuffix}{1}{"]"++argsuffix}{2}{"}"};
 
 			// -------------   Perform methods - the ixi lang verbs
-			switch(method) 
+			switch(method)
 				{"doze"} {// pause stream
 					if(agentDict[agent][1].playstate == true, {
 						agentDict[agent][1].playstate = false;
@@ -2741,7 +2829,9 @@ offbeat -> | ll ll         l|
 							proxyspace[agent].stop;
 						//});
 						//proxyspace[agent].objects[0].array[0].mute;
-				 		doc.stringColor_(offcolor, stringstart, stringend-stringstart);
+						(stringend.notNil && stringstart.notNil).if({
+							doc.setStringColor(offcolor, stringstart, stringend-stringstart);
+						});
 					});
 				}
 				{"perk"} { // restart stream
@@ -2752,7 +2842,9 @@ offbeat -> | ll ll         l|
 							proxyspace[agent].play;
 						//});
 						//proxyspace[agent].objects[0].array[0].unmute;
-				 		doc.stringColor_(oncolor, stringstart, stringend-stringstart);
+						(stringend.notNil && stringstart.notNil).if({
+							doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+						});
 					});
 				}
 				{"nap"} { // pause for either n secs or n secs:number of times
@@ -2772,14 +2864,16 @@ offbeat -> | ll ll         l|
 						// round to even, so it doesn't leave the stream off
 						times = argument[separator+1..argument.size-1].asInteger.round(2);
 					 	{
-					 		(times*2).do({ // times two as the interface is that it should nap twice 
+					 		(times*2).do({ // times two as the interface is that it should nap twice
 					 			if(on, {
 									if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
 										proxyspace[agent].stop;
 									});
 					 				try{proxyspace[agent].objects[0].array[0].mute}; // inside try, as metaagents have to nap as well
 					 				agentDict[agent][1].playstate = false;
-							 		{doc.stringColor_(offcolor, stringstart, stringend-stringstart)}.defer;
+									(stringend.notNil && stringstart.notNil).if({
+										{doc.setStringColor(offcolor, stringstart, stringend-stringstart)}.defer;
+									});
 					 				on = false;
 					 			}, {
 									if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
@@ -2787,12 +2881,14 @@ offbeat -> | ll ll         l|
 									});
 					 				try{proxyspace[agent].objects[0].array[0].unmute}; // inside try, as metaagents have to nap as well
 									agentDict[agent][1].playstate = true;
-							 		{doc.stringColor_(oncolor, stringstart, stringend-stringstart)}.defer;
+										(stringend.notNil && stringstart.notNil).if({
+											{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+										});
 					 				on = true;
 					 			});
 
-								if(barmode, { 
-								      ((napdur*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait; 
+								if(barmode, {
+								      ((napdur*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait;
 								},{
 								      napdur.wait;
 								});
@@ -2811,11 +2907,13 @@ offbeat -> | ll ll         l|
 																			if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
 								proxyspace[agent].stop;
 							});
-				 			
+
 					 		try{proxyspace[agent].objects[0].array[0].mute};
-							{doc.stringColor_(offcolor, stringstart, stringend-stringstart)}.defer;
-							if(barmode, { 
-							      ((napdur*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait; 
+								(stringend.notNil && stringstart.notNil).if({
+							{doc.setStringColor(offcolor, stringstart, stringend-stringstart)}.defer;
+								});
+							if(barmode, {
+							      ((napdur*agentDict[agent][1].durarr.sum)/TempoClock.default.tempo).wait;
 							},{
 							      napdur.wait;
 							});
@@ -2823,24 +2921,26 @@ offbeat -> | ll ll         l|
 								proxyspace[agent].play;
 							});
 					 		try{proxyspace[agent].objects[0].array[0].unmute};
-							{doc.stringColor_(oncolor, stringstart, stringend-stringstart)}.defer;
+								(stringend.notNil && stringstart.notNil).if({
+							{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+								})
 					 	}.fork(TempoClock.new);
 				 	});
 				}
-				{"shake"} { 
+				{"shake"} {
 					// -------- perform the method -----------
 					score = score.scramble;
 					// -------- put it back in place ----------
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
-				{"replace"} { 
+				{"replace"} {
 					var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 					// -------- perform the method -----------
 					if(scoremode == 0, {
-						if(argument.contains("down"), { 
-							score = score.collect({arg char; if(char != Char.space, {chars[26..51].choose}, {char})}); 
+						if(argument.contains("down"), {
+							score = score.collect({arg char; if(char != Char.space, {chars[26..51].choose}, {char})});
 						}, {
-							if(argument.contains("up"), { 
+							if(argument.contains("up"), {
 								score = score.collect({arg char; if(char != Char.space, {chars[0..26].choose}, {char})});
 							}, {
 								score = score.collect({arg char; if(char != Char.space, {chars.choose}, {char})});
@@ -2852,7 +2952,7 @@ offbeat -> | ll ll         l|
 					// -------- put it back in place ----------
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
-				{"insert"} { 
+				{"insert"} {
 					var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 					// -------- perform the method -----------
 					if(scoremode == 0, {
@@ -2863,7 +2963,7 @@ offbeat -> | ll ll         l|
 					// -------- put it back in place ----------
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
-				{"remove"} { 
+				{"remove"} {
 					// -------- perform the method -----------
 					if(scoremode == 0, {
 						score = score.collect({arg char; if((char != Char.space) && 0.5.coin, {Char.space}, {char}) });
@@ -2873,32 +2973,12 @@ offbeat -> | ll ll         l|
 					// -------- put it back in place ----------
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
-				{"slide"} { 
-					var firstarg, secondarg, temparray;
-					string = string ++ " 3 1 3 1"; // the default slide (in case no arguments are passed)
-					firstarg = string[string.findAll(" ")[1]+1..(string.findAll(" ")[2])-1];
-					secondarg = string[string.findAll(" ")[2]+1..(string.findAll(" ")[3])-1];
-					
-					// -------- perform the method -----------
-					temparray = [];
-					score.do({arg char; temparray = temparray.add( if(char==$ , {nil}, {char}) ) });
-					//temparray = temparray.collect({arg val; if(val.isNil.not, { abs(val-8) }) });
-					temparray = temparray.slide(firstarg.asInteger, secondarg.asInteger);
-					score = "";
-					temparray.do({arg item; score = score++if(item==nil, {" "}, {item.asString}) });
-
-					// -------- put it back in place ----------
-					this.swapString(doc, pureagentname, score, [true, true, true]);
-				}
-
-
-
 				{"swap"} {
 					var instruments;
 					// -------- perform the method -----------
 					instruments = score.reject({arg c; c==$ }).scramble;
 					score = score.collect({arg char; if(char!=$ , {instruments.pop}, {" "}) });
-					
+
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
 				{">shift"} {
@@ -2908,12 +2988,12 @@ offbeat -> | ll ll         l|
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
 				{"<shift"} {
-					argument = argument.asInteger;	
+					argument = argument.asInteger;
 					// -------- perform the method -----------
 					score = score.rotate(if((argument==0) || (argument=="") || (argument==" "), {-1}, {argument.neg}));
 					this.swapString(doc, pureagentname, score, [true, true, true]);
 				}
-				{"invert"} { 
+				{"invert"} {
 					var temparray;
 					// -------- perform the method -----------
 					temparray = [];
@@ -2929,7 +3009,7 @@ offbeat -> | ll ll         l|
 					// -------- perform the method -----------
 					if(argument.isNil || (argument==" "), {1}, {argument});
 					tempstring = "";
-					score.do({arg char; 
+					score.do({arg char;
 						tempstring = tempstring++char;
 						if(char!=$ , {
 							argument.do({ tempstring = tempstring++" " });
@@ -2989,60 +3069,60 @@ offbeat -> | ll ll         l|
 					last = sum-arraybutlastsum;
 					copy[copy.size-1] = last;
 					durarr.size.do({arg i; durarr[i] = abs(copy[i]) }); // make it absolote, so in the end (if too spaced) timing suffers
-				}				
+				}
 				{"detox"} {
 					this.swapString(doc, pureagentname, score, [true, true, true]);
-				}				
+				}
 				// below are Scheme like methods with operator in front of the agent
-				
+
 				{"))"} { // in future mode, agents can increase and decrease volume
 					this.increaseAmp(pureagentname++"))");
 				}
 				{"(("} { // put things in order in time
 					this.decreaseAmp(pureagentname++"((");
 				}
-				{"+"} { 
+				{"+"} {
 					argument = argument.asFloat;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true], ["+", argument]);
 				}
-				{"-"} { 
+				{"-"} {
 					argument = argument.asFloat;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true], ["-", argument]);
 				}
-				{"*"} { 
+				{"*"} {
 					argument = argument.asFloat;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true], ["*", argument]);
 				}
-				{"/"} { 
+				{"/"} {
 					argument = argument.asFloat;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true], ["/", argument]);
 				}
-				{"!"} { 
+				{"!"} {
 					argument = argument.asInteger;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true, false], ["!", argument]);
 				}
-				{"("} { 
+				{"("} {
 					//argument = argument.asInteger;
 					argument = argument.tr($ ,\);
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true, false], ["(", argument]);
 				}
-				{"^"} { 
+				{"^"} {
 					argument = argument.asInteger;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true, false], ["^", argument]);
 				}
-				{"<"} { 
+				{"<"} {
 					argument = argument.asInteger;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true, false], ["<", argument]);
 				}
-				{"@"} { 
+				{"@"} {
 					argument = argument.asInteger;
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true, true], ["@", argument], return);
@@ -3051,14 +3131,14 @@ offbeat -> | ll ll         l|
 
 				}
 				{"remind"} {
-					this.getMethodsList;		
+					this.getMethodsList;
 				}
 				{"input"} {
 					inbus = argument.asInteger + 7; // for live recording of samples
 				}
 				{"scale"} {
 					var firstarg, secondarg, chosenscale, globalscale, dictscore, agent, mode, tempscale;
-					
+
 					firstarg = string[string.findAll(" ")[0]+1..(string.findAll(" ")[1])-1];
 					agent = (docnum.asString++firstarg).asSymbol;
 					secondarg = string[string.findAll(" ")[1]+1..(string.findAll(" ")[2])-1];
@@ -3069,9 +3149,9 @@ offbeat -> | ll ll         l|
 
 					dictscore = agentDict[agent][1].scorestring;
 					dictscore = dictscore.reject({ |c| c.ascii == 34 }); // get rid of quotation marks
-					mode = block{|break| 
+					mode = block{|break|
 						["|", "[", "{", ")"].do({arg op, i;						var c = dictscore.find(op);
-							if(c.isNil.not, {break.value(i)}); 
+							if(c.isNil.not, {break.value(i)});
 						});
 					};
 					switch(mode)
@@ -3085,30 +3165,31 @@ offbeat -> | ll ll         l|
 				}
 				;
 		});
-	}	
+	}
 
 	updateInstrDict {arg char;
 		instrDict[char.asSymbol] = char.asSymbol;
-		//instrDict = dict;		
+		//instrDict = dict;
 	}
-	
+
 	getMethodsList {
-		var doc;
-		doc = Document.new;
-		doc.name_("ixi lang lingo");
-		doc.promptToSave_(false);
-		doc.background_(Color.black);
-		doc.stringColor_(Color.green);
-		doc.bounds_(Rect(10, 500, 650, 800));
-		doc.font_(Font("Monaco",16));
-		doc.string_("
+		var doc, str;
+		//doc = Document.new;
+		//doc.name_("ixi lang lingo");
+		//doc.promptToSave_(false);
+		//doc.background_(Color.black);
+		//doc.setStringColor(Color.green);
+		//doc.bounds_(Rect(10, 500, 650, 800));
+		//doc.font_(Font("Monaco",16));
+		//doc.string_("
+		str = "
 	    --    ixi lang lingo	   --
- 
+
  -----------  score modes  -----------
  [		: melodic score
  |		: percussive score
  {		: concrete score (samples)
-  
+
  -----------  operators  -----------
  ->		: score assigned to an agent
  >> 		: set effect
@@ -3116,16 +3197,16 @@ offbeat -> | ll ll         l|
  ))		: increase amplitude
  ((		: decrease amplitude
  tonic	: set the tonic
- 
+
  ------------  arguments  ---------
  !		: insert silence (!16 is silence for 16 beats)
- +		: transpose in melodic mode 
- -		: transpose in melodic mode 
- *		: expand the score in all modes 
- /		: contract the score in all modes 
- ()		: control note length (1 is whole note, 2 is half, etc. - ~ will multiply the lenghts with n) 
- ^^		: control note accent (1 is quiet, 9 is loud) 
- <>		: panning (1 is left, 9 right) 
+ +		: transpose in melodic mode
+ -		: transpose in melodic mode
+ *		: expand the score in all modes
+ /		: contract the score in all modes
+ ()		: control note length (1 is whole note, 2 is half, etc. - ~ will multiply the lenghts with n)
+ ^^		: control note accent (1 is quiet, 9 is loud)
+ <>		: panning (1 is left, 9 right)
 
   -----------  methods  -----------
  doze 	: pause agent
@@ -3139,11 +3220,11 @@ offbeat -> | ll ll         l|
  invert	: invert the melody
  expand	: expand the score with n nr. of silence(s)
  revert	: revert the order
- order	: organise in time 
+ order	: organise in time
  up		: to upper case (in rhythm mode)
  down	: to lower case (in rhythm mode)
  yoyo	: switch upper and lower case (in rhythm mode)
- 	
+
  -----------  commands  -----------
  tempo	: set tempo in bpm (accelerando op: tempo:time)
  future	: set events in future (arg sec:times (4:4) or bars:times (4b:4))
@@ -3153,7 +3234,7 @@ offbeat -> | ll ll         l|
  tuning 	: set the tuning for next agents
  scalepush  : set the scale for all running agents
  tuningpush : set the tuning for all running agents
- grid  	: draw a line every n spaces 
+ grid  	: draw a line every n spaces
  remind	: get this document
  instr 	: info on available instruments
  tonality	: info on available scales and tunings
@@ -3161,7 +3242,7 @@ offbeat -> | ll ll         l|
  snapshot	 -> : store current state as a snapshot (snapshot -> mySnap)
  snapshot	 mySnap : recall the snapshot
  suicide 	: allow the language to kill itself sometime in the future
- hotline	: if you change your mind wrgt the suicide 
+ hotline	: if you change your mind wrgt the suicide
  midiclients : post the available midiclients
  midiout : set the port to the midiclient
  store	: store the environmental setup of the session
@@ -3170,7 +3251,7 @@ offbeat -> | ll ll         l|
  playscore	: play a saved session (exactly the same, unless you name a variation)
  newrec 	: start a new recording and ignore all that has been typed and evaluated before
  autocode : autocode some agents and scores
-  
+
  -----------  effects  -----------
  reverb
  reverbS
@@ -3181,29 +3262,32 @@ offbeat -> | ll ll         l|
  bitcrush
  techno
  technosaw
- antique  
+ antique
  lowpass
  tremolo
  vibrato
-	");
+	"//);
+		;
+		str.postln;
 	}
-	
+
 	getInstrumentsList {
 		var doc;
-		doc = Document.new;
-		doc.name_("ixi lang instruments");
-		doc.promptToSave_(false);
-		doc.background_(doccolor);
-		doc.stringColor_(offcolor);
-		doc.bounds_(Rect(10, 500, 500, 800));
-		doc.font_(Font("Monaco",16));
-		doc.string_("
+		//doc = Document.new;
+		//doc.name_("ixi lang instruments");
+		//doc.promptToSave_(false);
+		//doc.background_(doccolor);
+		//doc.stringColor_(offcolor);
+		//doc.bounds_(Rect(10, 500, 500, 800));
+		//doc.font_(Font("Monaco",16));
+		//doc.string_("
+		("
 	    --    ixi lang instruments    --
- 
+
  ------  synthesis instruments  ------\n\n"++
- 
+
 "project synthdefs:\n\n" ++
- 
+
 ixiInstr.getProjectSynthesisSynthdefs // calling an XiiLangInstr instance
 
 ++ "\n\nixi lang synthdefs:\n\n" ++
@@ -3217,15 +3301,16 @@ ixiInstr.getXiiLangSynthesisSynthdefs // calling an XiiLangInstr instance
 ++
 
 ixiInstr.getSamplesSynthdefs
-	);
+	//);
+		).postln;
 	}
-	
+
 	addixiMenu {
-		
+		/*
 		var a;
 		CocoaMenuItem.clearCustomItems;
 		a = SCMenuGroup(nil, "ixi", 10);
-		
+
 		SCMenuItem(a, "Feedback")
 			.action_({
 				"open http://www.ixi-audio.net/ixilang/ixilang_feedback.html".unixCmd;
@@ -3237,7 +3322,7 @@ ixiInstr.getSamplesSynthdefs
 		"open http://www.ixi-audio.net/ixilang/survey".unixCmd;
 			});
 		SCMenuSeparator(a, 3); // add a separator
-			
+
 		SCMenuItem(a, "Check for Update")
 			.action_({
 				var latestversion, pipe;
@@ -3246,7 +3331,7 @@ ixiInstr.getSamplesSynthdefs
 				// then get the version number (from a textfile with only one number in it)
 				if(a==0, {
 					pipe = Pipe.new("curl http://www.ixi-audio.net/ixilang/version.txt", "r");
-					latestversion = pipe.getLine; 
+					latestversion = pipe.getLine;
 					pipe.close;
 					[\latestversion, latestversion, \thisversion, thisversion].postln;
 					if(latestversion.asFloat > thisversion, {
@@ -3257,10 +3342,11 @@ ixiInstr.getSamplesSynthdefs
 					});
 				});
 			});
+		*/
 	}
 
-	
-	
+
+
 }
 
 
@@ -3268,11 +3354,11 @@ ixiInstr.getSamplesSynthdefs
 
 XiiLangSingleton {
 	classvar <>windowsList;
-	
+
 	*new{ |object|
 		^super.new.initXiiLangSingleton(object);
 	}
-	
+
 	initXiiLangSingleton { |object, windowsCount|
 		if(windowsCount == 1, {
 			windowsList = [object];
@@ -3284,16 +3370,16 @@ XiiLangSingleton {
 }
 
 
-+ String { 
-	
++ String {
+
 	// this is from wslib  /Lang/Improvements/extString-collect.sc
-	collect { | function | 
+	collect { | function |
 		// it changes functionality of some important methods (like .tr) so I have to include it here
 		var result = "";
 		this.do {|elem, i| result = result ++ function.value(elem, i); }
 		^result;
 	}
-	
+
 	ixilang { | window=nil, newagent=false |
 		if(window.isNil, {
 			Document.new.front.string_("XiiLang.new()").string.interpret;
@@ -3306,5 +3392,5 @@ XiiLangSingleton {
 			}.defer(0.3);
 		});
 	}
-}		
+}
 
