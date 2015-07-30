@@ -321,16 +321,17 @@ XiiLang {
 
 
 		doc.keyDownAction_({|doc, char, mod, unicode, keycode |
-			var linenr, string;
+			var string;
 			//keycode.postln;
 			// evaluating code (the next line will use .isAlt, when that is available
 			if(((mod  == 524288) || (mod == 2621440))&& ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)), { // alt + left or up or right or down arrow keys
 				"eval".postln;
-				linenr = doc.string[..doc.selectionStart-1].split($\n).size;
+				//linenr = doc.string[..doc.selectionStart-1].split($\n).size;
 				//doc.selectLine(linenr);
 				string = doc.selectedString;
+				[\string, string].postln;
+
 				(string.size < 1).if({"Hilight some text!".warn});
-				string.postln;
 				if(keycode==123, { // not 124, 125,
 					this.freeAgent(string);
 				}, {
@@ -1307,15 +1308,21 @@ XiiLang {
 		}.fork(AppClock);
 	}
 	// method invoked on alt+left arrow, for easy freeing of an agent (line)
+	// XXX FIXING THIS
 	freeAgent { arg string;
-		var prestring, splitloc, agent, linenr;
+		var prestring, splitloc, agent, linenr, stringstart, stringend, pureagentname;
 		var recursionfunc;
 		linenr = doc.string[..doc.selectionStart-1].split($\n).size;
-		doc.selectLine(linenr);
+		//doc.selectLine(linenr);
 		string = string.tr($ , \);
 		splitloc = string.find("->");
-		agent = string[0..splitloc-1]; // get the name of the agent
-		agent = (docnum.asString++agent).asSymbol;
+		pureagentname = string[0..splitloc-1]; // get the name of the agent
+		agent = (docnum.asString++pureagentname).asSymbol;
+		[\pureagentnameX, pureagentname].postln;
+
+		#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
+
+		[pureagentname, stringstart, stringend].postln;
 
 		recursionfunc = {arg subagent;
 				if(groups[subagent].isNil.not, {
@@ -1348,8 +1355,9 @@ XiiLang {
 		proxyspace[agent].clear;
 		agentDict[agent] = nil;
 		metaAgentDict[agent] = nil;
-
-		{doc.setStringColor(deadcolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // killed code is red
+	//\deb.postln;
+		{doc.setStringColor(deadcolor, stringstart, stringend-stringstart)}.defer;
+	//	{doc.setStringColor(deadcolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // killed code is red
 	}
 
 	interpret { arg cmd;
@@ -1586,7 +1594,7 @@ XiiLang {
 		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, panarr, transposition, repeats;
 		var startWempty = false;
 		var newInstrFlag = false;
-		var postfixArgDict;
+		var postfixArgDict, stringstart, stringend;
 		var prestring, scorestartloc, morphmode;
 
 		scorestring = string.reject({arg char; char.ascii == 10 }); // to store in agentDict
@@ -1595,6 +1603,7 @@ XiiLang {
 		splitloc = prestring.find("->");
 		agent = prestring[0..splitloc-1]; // get the name of the agent
 		pureagent = agent;
+		#stringstart, stringend = this.findStringStartEnd(doc, pureagent);
 
 		morphmode = prestring[splitloc+2..prestring.size];
 		if(morphmode.size < 1, { morphmode = nil });
@@ -1671,7 +1680,8 @@ XiiLang {
 		agentDict[agent][1].scorestring = scorestring.asCompileString;
 		agentDict[agent][1].instrument = "rhythmtrack";
 
-		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
+		{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+//		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Percussive Agent : ".post; pureagent.postln; agentDict[agent].postln;
 		^this.playScoreMode0(agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode, repeats, return, snapshot);
 	}
@@ -1685,7 +1695,7 @@ XiiLang {
 		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, panarr;
 		var startWempty = false;
 		var channelicon, midichannel;
-		var postfixArgDict;
+		var postfixArgDict, stringstart, stringend;
 
 		channelicon = 0;
 
@@ -1701,6 +1711,7 @@ XiiLang {
 		});
 		pureagent = agent;
 		agent = (docnum.asString++agent).asSymbol;
+		#stringstart, stringend = this.findStringStartEnd(doc, pureagent);
 
 		score = string[scorestartloc+1..string.size-1];
 		endchar = score.find("]"); // the index (int) of the end op in the string
@@ -1790,7 +1801,8 @@ XiiLang {
 		agentDict[agent][1].instrument = instrument;
 		agentDict[agent][1].midichannel = midichannel;
 
-		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
+		{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+		//{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Melodic Agent : ".post; pureagent.postln; agentDict[agent].postln;
 		^this.playScoreMode1(agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel, repeats, return, snapshot);
 		// this has to be below the playscore method
@@ -1802,7 +1814,7 @@ XiiLang {
 		var prestring, silenceicon, silences, postfixargs, panarr, newInstrFlag;
 		var durarr, pitch, spacecount, amparr, ampstring, quantphase, empty, outbus, repeats;
 		var startWempty = false;
-		var postfixArgDict;
+		var postfixArgDict, stringstart, stringend;
 
 		scorestartloc = string.find("{");
 		prestring = string[0..scorestartloc-1].tr($ , \); // get rid of spaces until score
@@ -1815,6 +1827,7 @@ XiiLang {
 			instrument = prestring[splitloc+2..prestring.size];
 		});
 		pureagent = agent;
+		#stringstart, stringend = this.findStringStartEnd(doc, pureagent);
 		agent = (docnum.asString++agent).asSymbol;
 		score = string[scorestartloc+1..string.size-1];
 		endchar = score.find("}"); // the index (int) of the end op in the string
@@ -1887,7 +1900,9 @@ XiiLang {
 		agentDict[agent][1].scorestring = string.asCompileString;
 		agentDict[agent][1].instrument = instrument;
 
-		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // if code is green (sleeping)
+		{doc.setStringColor(oncolor, stringstart, stringend-stringstart)}.defer;
+
+//		{doc.setStringColor(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // if code is green (sleeping)
 		"------    ixi lang: Created Concrete Agent : ".post; pureagent.postln; agentDict[agent].postln;
 		^this.playScoreMode2(agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag, repeats, return, snapshot);
 		// this has to be below the playscore method
@@ -2627,7 +2642,7 @@ XiiLang {
 					{ // make agent white again
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
-						doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+						// -- doc.setStringColor(oncolor, stringstart, stringend-stringstart);
 						//doc.selectRange(cursorPos); // set cursor pos again
 					doc.select(cursorPos, 0);
 					}.defer;
@@ -2655,10 +2670,9 @@ XiiLang {
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname);
 						(stringend.notNil && stringstart.notNil).if({
-							newstr = doc.string[0..stringstart-1] ++
-							modstring ++
-							doc.string[stringend..doc.string.size];
-							doc.string_(newstr);
+							newstr = doc.string[0..stringstart-1] ++ modstring ++ doc.string[stringend..doc.string.size];
+							//doc.string_(newstr);
+							doc.setString(modstring, stringstart, stringend-stringstart);
 							doc.select(cursorPos, 0);
 							/*doc.string_( modstring, stringstart, stringend-stringstart);*/
 							//doc.string_(doc.string + "\n" ++ modstring);
@@ -2685,7 +2699,8 @@ XiiLang {
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
 						(stringend.notNil && stringstart.notNil).if({
-							doc.setStringColor(oncolor, stringstart, stringend-stringstart);
+							[\stringstartZXX, stringstart, \stringendSXX, stringend].postln;
+							//doc.setStringColor(oncolor, stringstart, stringend-stringstart);
 						});
 						//doc.selectRange(cursorPos); // set cursor pos again
 						doc.select(cursorPos, 0);
@@ -3035,7 +3050,8 @@ XiiLang {
 				}
 				{"down"} { // all instruments lowercase
 					// -------- perform the method -----------
-					score = score.toLower;								this.swapString(doc, pureagentname, score, [true, false, false]);
+					score = score.toLower;
+					this.swapString(doc, pureagentname, score, [true, false, false]);
 				}
 				{"yoyo"} { // swaps lowercase and uppercase randomly
 					// -------- perform the method -----------
@@ -3398,4 +3414,3 @@ XiiLangSingleton {
 		});
 	}
 }
-

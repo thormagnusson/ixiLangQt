@@ -1,0 +1,85 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+*getDict	XiiLangDicts.sc	/^	*getDict {arg language;$/;"	m
+*getList	XiiLangDicts.sc	/^	*getList {arg language;$/;"	m
+*initClass	XiiLangRecord.sc	/^	*initClass {$/;"	m
+*new	XiiLang.sc	/^	*new { arg project="default", keyarg="C", txt=false, newdoc=false, language, dicts, score, numChannels=2;$/;"	m
+*new	XiiLangColors.sc	/^	*new { arg projectnamearg;$/;"	m
+*new	XiiLangDicts.sc	/^	*new { arg language;$/;"	m
+*new	XiiLangGUI.sc	/^	*new { arg projectnamearg, numChannels=2;$/;"	m
+*new	XiiLangInstr.sc	/^	*new {| project="default", loadsamples=true, numChannels |$/;"	m
+*new	XiiLangMatrix.sc	/^	*new { arg size=6, direction=\\x, instrDict, doccol, strcol;$/;"	m
+*new	XiiLangRecord.sc	/^	*new { arg server, inbus=0, numChannels=2, headerFormat='aiff', sampleFormat='int16';		^super.new.initXiiLangRecord(server, inbus, numChannels, headerFormat, sampleFormat)$/;"	m
+GPL	XiiLang.sc	/^GPL license (c) thor magnusson - ixi audio, 2009-2012$/;"	c
+MIDIClockOut	XiiLang.sc	/^MIDIClockOut (Crucial Lib -> for slaving other apps to ixi lang)$/;"	c
+XiiLang	XiiLang.sc	/^XiiLang {$/;"	c
+XiiLangColors	XiiLangColors.sc	/^XiiLangColors {$/;"	c
+XiiLangDicts	XiiLangDicts.sc	/^XiiLangDicts {$/;"	c
+XiiLangGUI	XiiLangGUI.sc	/^XiiLangGUI  {$/;"	c
+XiiLangInstr	XiiLangInstr.sc	/^XiiLangInstr {$/;"	c
+XiiLangMatrix	XiiLangMatrix.sc	/^XiiLangMatrix {	$/;"	c
+XiiLangRecord	XiiLangRecord.sc	/^XiiLangRecord {$/;"	c
+XiiLangSingleton	XiiLang.sc	/^XiiLangSingleton {$/;"	c
+addixiMenu	XiiLang.sc	/^	addixiMenu {$/;"	m
+addixiMenu	XiiLangGUI.sc	/^	addixiMenu {$/;"	m
+cmdPeriod	XiiLangRecord.sc	/^	cmdPeriod {$/;"	m
+collect	XiiLang.sc	/^	collect { | function |$/;"	m
+createMetaAgent	XiiLang.sc	/^	createMetaAgent {arg string;$/;"	m
+createRecorderDoc	XiiLangInstr.sc	/^	createRecorderDoc {arg caller, numChan; \/\/ doccolor, oncolor, inbus=8;$/;"	m
+decreaseAmp	XiiLang.sc	/^	decreaseAmp {arg string;$/;"	m
+envirSetup	XiiLang.sc	/^	envirSetup { arg txt, newdoc, project;$/;"	m
+findStringStartEnd	XiiLang.sc	/^	findStringStartEnd {arg doc, pureagentname;$/;"	m
+freeAgent	XiiLang.sc	/^	freeAgent { arg string;$/;"	m
+freeBuffers	XiiLangInstr.sc	/^	freeBuffers {$/;"	m
+getInstrumentsList	XiiLang.sc	/^	getInstrumentsList {$/;"	m
+getMethodsList	XiiLang.sc	/^	getMethodsList {$/;"	m
+getProjectSynthesisSynthdefs	XiiLangInstr.sc	/^	getProjectSynthesisSynthdefs {$/;"	m
+getSamplesSynthdefs	XiiLangInstr.sc	/^	getSamplesSynthdefs {$/;"	m
+getXiiLangSynthesisSynthdefs	XiiLangInstr.sc	/^	getXiiLangSynthesisSynthdefs {$/;"	m
+headerFormat_	XiiLangRecord.sc	/^	headerFormat_ { arg argHeaderFormat;$/;"	m
+inbus_	XiiLangRecord.sc	/^	inbus_ { arg argInbus;$/;"	m
+increaseAmp	XiiLang.sc	/^	increaseAmp {arg string;$/;"	m
+initEffect	XiiLang.sc	/^	initEffect {arg string;$/;"	m
+initGUIXii	XiiLangGUI.sc	/^	initGUIXii { arg projectnamearg, numChannels;$/;"	m
+initXiiLang	XiiLang.sc	/^	initXiiLang {arg project, keyarg, txt, newdoc, lang, dicts, score, numChannels;$/;"	m
+initXiiLangColors	XiiLangColors.sc	/^	initXiiLangColors { arg projectname;$/;"	m
+initXiiLangInstr	XiiLangInstr.sc	/^	initXiiLangInstr {| argproject, loadsamples, numChannels |$/;"	m
+initXiiLangMatrix	XiiLangMatrix.sc	/^	initXiiLangMatrix {arg size, direction, instrDict, adoccol, astrcol;$/;"	m
+initXiiLangRecord	XiiLangRecord.sc	/^	initXiiLangRecord { arg argServer, argInbus, argChans, argHeaderFormat, argSampleFormat;$/;"	m
+initXiiLangSingleton	XiiLang.sc	/^	initXiiLangSingleton { |object, windowsCount|$/;"	m
+interpret	XiiLang.sc	/^	interpret { arg cmd;$/;"	m
+ixilang	XiiLang.sc	/^	ixilang { | window=nil, newagent=false |$/;"	m
+makeEffectDict	XiiLang.sc	/^	makeEffectDict { \/\/ more to come here + parameter control - for your own effects, simply add a new line to here and it will work out of the box$/;"	m
+makePan2SynthDefs	XiiLangInstr.sc	/^	makePan2SynthDefs {| argproject, loadsamples, numChannels |$/;"	m
+makePanAzSynthDefs	XiiLangInstr.sc	/^	makePanAzSynthDefs {| argproject, loadsamples, numChannels |$/;"	m
+makeSynthDef	XiiLangInstr.sc	/^	makeSynthDef { arg buffer, char, numChan;$/;"	m
+numChannels_	XiiLangRecord.sc	/^	numChannels_ { arg argNumChannels;$/;"	m
+opInterpreter	XiiLang.sc	/^	opInterpreter {arg string, return=false;$/;"	m
+parseChord	XiiLang.sc	/^	parseChord {arg string, mode;$/;"	m
+parseMethod	XiiLang.sc	/^	parseMethod {arg string, return=false;$/;"	m
+parsePostfixArgs	XiiLang.sc	/^	parsePostfixArgs {arg postfixstring;$/;"	m
+parseScoreMode0	XiiLang.sc	/^	parseScoreMode0 {arg string, return, snapshot=false;$/;"	m
+parseScoreMode1	XiiLang.sc	/^	parseScoreMode1 {arg string, return, snapshot=false;$/;"	m
+parseScoreMode2	XiiLang.sc	/^	parseScoreMode2 {arg string, return, snapshot=false;$/;"	m
+playScoreMode0	XiiLang.sc	/^	playScoreMode0 {arg agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode, repeats, return, snapshot;$/;"	m
+playScoreMode1	XiiLang.sc	/^	playScoreMode1 {arg agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel=0, repeats, return, snapshot;$/;"	m
+playScoreMode2	XiiLang.sc	/^	playScoreMode2 {arg agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag, repeats, return, snapshot;$/;"	m
+post	XiiLangDicts.sc	/^	post {$/;"	m
+removeEffect	XiiLang.sc	/^	removeEffect {arg string;$/;"	m
+returnBufferDict	XiiLangInstr.sc	/^	returnBufferDict {$/;"	m
+returnInstrDict	XiiLangInstr.sc	/^	returnInstrDict {$/;"	m
+returnMelodicInstr	XiiLangInstr.sc	/^	returnMelodicInstr {$/;"	m
+returnPercussiveInstr	XiiLangInstr.sc	/^	returnPercussiveInstr {$/;"	m
+sampleFormat_	XiiLangRecord.sc	/^	sampleFormat_ { arg argSampleFormat;$/;"	m
+setAmp_	XiiLangRecord.sc	/^	setAmp_ {arg amp;$/;"	m
+setTempo_	XiiLangMatrix.sc	/^	setTempo_ {arg newtempo;$/;"	m
+start	XiiLangRecord.sc	/^	start { arg path, argBufnum; $/;"	m
+stop	XiiLangRecord.sc	/^	stop {$/;"	m
+swapString	XiiLang.sc	/^	swapString {arg doc, pureagentname, newscore, modearray, newarg, return=false;$/;"	m
+sync	extTempoClock.sc	/^        sync {|tempo, secs= 4, resolution= 1|$/;"	m
+update	XiiLangMatrix.sc	/^	update {|theChanger, what, moreArgs|$/;"	m
+updateInstrDict	XiiLang.sc	/^	updateInstrDict {arg char;$/;"	m
