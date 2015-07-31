@@ -21,7 +21,7 @@ XiiLangColors	XiiLangColors.sc	/^XiiLangColors {$/;"	c
 XiiLangDicts	XiiLangDicts.sc	/^XiiLangDicts {$/;"	c
 XiiLangGUI	XiiLangGUI.sc	/^XiiLangGUI  {$/;"	c
 XiiLangInstr	XiiLangInstr.sc	/^XiiLangInstr {$/;"	c
-XiiLangMatrix	XiiLangMatrix.sc	/^XiiLangMatrix {	$/;"	c
+XiiLangMatrix	XiiLangMatrix.sc	/^XiiLangMatrix {$/;"	c
 XiiLangRecord	XiiLangRecord.sc	/^XiiLangRecord {$/;"	c
 XiiLangSingleton	XiiLang.sc	/^XiiLangSingleton {$/;"	c
 addixiMenu	XiiLang.sc	/^	addixiMenu {$/;"	m

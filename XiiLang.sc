@@ -315,7 +315,9 @@ XiiLang {
 		doc.background_(doccolor);
 		doc.parent.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
 		doc.font_(Font("Monaco", 16));
-		if(txt == false, { doc.string_("hello") });
+		if(txt == false, { doc.string_("oo -> |asdf|
+		matrix 8
+		oxo -> |Sdfsdf| ") });
 		doc.setProperty(\styleSheet, "color:white"); // set the cursor to white
 		doc.setStringColor(oncolor, 0, 100000); // then set the text color to whatever the user has specified
 
