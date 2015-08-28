@@ -1,4 +1,7 @@
 
+
+// use "~/Documents/ixilang".standardizePath as the path for projects
+
 /*
 
 GPL license (c) thor magnusson - ixi audio, 2009-2012
@@ -140,8 +143,8 @@ XiiLang {
 	}
 
 	initXiiLang {arg project, keyarg, txt, newdoc, lang, dicts, score, numChannels;
-		"project, keyarg, txt, newdoc, lang, dicts, score, numChannels".postln;
-		[project, keyarg, txt, newdoc, lang, dicts, score, numChannels].postln;
+	//	"project, keyarg, txt, newdoc, lang, dicts, score, numChannels".postln;
+	//	[project, keyarg, txt, newdoc, lang, dicts, score, numChannels].postln;
 		if(score.isNil, {
 			randomseed = 1000000.rand;
 		},{
@@ -228,7 +231,7 @@ XiiLang {
 			langCommands = XiiLangDicts.getList(lang.asSymbol);
 		});
 
-		[\langCommands, langCommands].postln;
+//		[\langCommands, langCommands].postln;
 
 		if(score.isNil.not, {
 			this.playScore(score[1]);
@@ -311,13 +314,12 @@ XiiLang {
 		});
 
 		//doc.parent.bounds_(Rect(400,300, 1000, 600));
-		\deb1.postln;
 		doc.background_(doccolor);
 		doc.parent.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
 		doc.font_(Font("Monaco", 16));
 		if(txt == false, { doc.string_("oo -> |asdf|
-		matrix 8
-		oxo -> |Sdfsdf| ") });
+matrix 8
+oxo -> |Sdfsdf| \n\n\n") });
 		doc.setProperty(\styleSheet, "color:white"); // set the cursor to white
 		doc.setStringColor(oncolor, 0, 100000); // then set the text color to whatever the user has specified
 
@@ -330,8 +332,7 @@ XiiLang {
 				"eval".postln;
 				//linenr = doc.string[..doc.selectionStart-1].split($\n).size;
 				//doc.selectLine(linenr);
-				string = doc.selectedString;
-				[\string, string].postln;
+				string = doc.selectedString; // ++ "\n";
 
 				(string.size < 1).if({"Hilight some text!".warn});
 				if(keycode==123, { // not 124, 125,
@@ -378,28 +379,34 @@ XiiLang {
 		});
 		// these two folders are created if the user is downloading from github and hasn't created the ixilang folder in their SC folder
 		if((Platform.userAppSupportDir ++"/ixilang").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang")).unixCmd; // create the scores folder
-			"ixi-lang NOTE: an ixi lang folder was not found in your SuperCollider directory - It was created".postln;
+			//("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang")).unixCmd; // create the scores folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang");
+			"ixi-lang NOTE: an ixi lang folder was not found in your SuperCollider directory (in ~Library/Application Support) - It was created".postln;
 		});
 		if((Platform.userAppSupportDir ++"/ixilang/default").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/default")).unixCmd; // create the scores folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang/default");
+			//("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/default")).unixCmd; // create the scores folder
 			"ixi-lang NOTE: an ixi lang default folder was not found in your ixi lang directory - It was created".postln;
 		});
 		// just make sure that all folders are in place
 		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/scores").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/scores")).unixCmd; // create the scores folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang/"++project++"/scores");
+			//("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/scores")).unixCmd; // create the scores folder
 			"ixi-lang NOTE: a scores folder was not found for saving scores - It was created".postln;
 		});
 		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings")).unixCmd; // create the recordings folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings");
+	//		("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/recordings")).unixCmd; // create the recordings folder
 			"ixi-lang NOTE: a recordings folder was not found for saving scores - It was created".postln;
 		});
 		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions")).unixCmd; // create the sessions folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions");
+			// ("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/sessions")).unixCmd; // create the sessions folder
 			"ixi-lang NOTE: a sessions folder was not found for saving scores - It was created".postln;
 		});
 		if((Platform.userAppSupportDir ++"/ixilang/"++project++"/samples").pathMatch==[], {
-			("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/samples")).unixCmd; // create the samples folder
+			File.mkdir(Platform.userAppSupportDir ++"/ixilang/"++project++"/samples");
+			//("mkdir -p" + (Platform.userAppSupportDir ++"/ixilang/"++project++"/samples")).unixCmd; // create the samples folder
 			"ixi-lang NOTE: a samples folder was not found for saving scores - It was created".postln;
 		});
 	}
@@ -408,11 +415,11 @@ XiiLang {
 	opInterpreter {arg string, return=false;
 		var oldop, operator; // the various operators of the language
 		var methodFound = false;
-		string = string.reject({ |c| c.ascii == 10 }); // get rid of char return XXX TESTING (before Helsinki GIG)
+		//string = string.reject({ |c| c.ascii == 78 }); // get rid of char return XXX TESTING (before Helsinki GIG)
 
-		string.postln;
 
 		scoreArray = scoreArray.add([Main.elapsedTime, string]); // recording the performance
+
 		operator = block{|break| // better NOT mess with the order of the following... (operators using -> need to be before "->")
 			langCommands.do({arg op; var suggestedop, space;
 				var c = string.find(op);
@@ -497,10 +504,12 @@ XiiLang {
 			{"->"}{
 				var mode;
 				mode = block{|break|
-					["|", "[", "{", ")", "$", "~"].do({arg op, i;						var c = string.find(op);
+					["|", "[", "{", ")", "$", "~"].do({arg op, i;
+					    var c = string.find(op);
 						if(c.isNil.not, {break.value(i)});
 					});
 				};
+			[\mode, mode].postln;
 				switch(mode)
 					{0} { ^this.parseScoreMode0(string, return) }
 					{1} { ^this.parseScoreMode1(string, return) }
@@ -741,7 +750,9 @@ XiiLang {
 			}
 			{"help"}{
 				//XiiLang.openHelpFile;	 // ixi lang doesn't have the new helpfile format
-				(XiiLang.filenameSymbol.asString.dirname++"/XiiLang.html").openTextFile;
+				//(XiiLang.filenameSymbol.asString.dirname++"/XiiLang.html").openTextFile;
+				WebView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5).url_(XiiLang.filenameSymbol.asString.dirname++"/XiiLang.html").enterInterpretsSelection_(true);
+
 			}
 			{"tonality"}{
 				var doc;
@@ -2512,7 +2523,9 @@ XiiLang {
 
 	findStringStartEnd {arg doc, pureagentname;
 		var allreturns, stringstart, stringend, tempstringstart;
-		allreturns = doc.string.findAll("\n") ++ doc.string.findAll(""++13.asAscii);
+		var docstring = doc.string ++ "\n"; // added in Qt as the last line wasn't working
+//		allreturns = doc.string.findAll("\n") ++ doc.string.findAll(""++13.asAscii);
+		allreturns = docstring.findAll("\n") ++ docstring.findAll(""++13.asAscii);
 		allreturns.notNil.if({
 			try{block{ | break |
 				doc.string.findAll(pureagentname).do({arg loc, i;
@@ -2701,7 +2714,6 @@ XiiLang {
 						cursorPos = doc.selectionStart; // get cursor pos
 						#stringstart, stringend = this.findStringStartEnd(doc, pureagentname); // this will cause error since the agent string will have changed
 						(stringend.notNil && stringstart.notNil).if({
-							[\stringstartZXX, stringstart, \stringendSXX, stringend].postln;
 							//doc.setStringColor(oncolor, stringstart, stringend-stringstart);
 						});
 						//doc.selectRange(cursorPos); // set cursor pos again
@@ -3296,15 +3308,15 @@ XiiLang {
 
 	getInstrumentsList {
 		var doc;
-		//doc = Document.new;
-		//doc.name_("ixi lang instruments");
-		//doc.promptToSave_(false);
-		//doc.background_(doccolor);
-		//doc.stringColor_(offcolor);
-		//doc.bounds_(Rect(10, 500, 500, 800));
-		//doc.font_(Font("Monaco",16));
-		//doc.string_("
-		("
+		doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700))
+		.resize_(5)
+		.name_("ixi lang instruments")
+		.background_(doccolor)
+		.setProperty(\styleSheet, "color:white") // set the cursor to white
+		.setStringColor(oncolor, 0, 100000) // then set the text color to whatever the user has specified
+		.font_(Font("Monaco",16))
+		.string_("
+
 	    --    ixi lang instruments    --
 
  ------  synthesis instruments  ------\n\n"++
