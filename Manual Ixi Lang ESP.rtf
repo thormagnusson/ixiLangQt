@@ -1,0 +1,306 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1265\cocoasubrtf210
+{\fonttbl\f0\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red255\green118\blue111;\red0\green255\blue0;\red254\green147\blue106;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww18620\viewh15460\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\fs72 \cf0 Ixi lang \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\fs28 \cf0 Manual - Carlos D. Perales
+\fs24 \
+\
+alt + -\'96\'96>  (eval\'faa / activa la linea de c\'f3digo. Tambi\'e9n funciona con flecha abajo y arriba)\
+alt + <\'96\'96\'96 (apaga / desactiva la linea de c\'f3digo \'96 color rojo)\
+cmd+. detiene todo el sonido (comando de Supercollider)\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\fs36 \cf0 COMANDOS DE AYUDA
+\fs24 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf2 help\cf0 : ayuda principal y efectos\
+\cf2 remind\cf0 : funciones, ortograf\'eda, etc.\
+\cf2 instr\cf0 : sonidos e instrumentos disponibles\
+\cf2 tonality\cf0 : escalas y afinaciones.\
+Los espacios en blancos act\'faan como silencios\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 Grid 8\cf0 \
+Crea una rejilla de pauta para organizar samples en el espacio:\
+|    |    |    |    |    |    |    |\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 ejemplo:\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf2 |	|	|	|	|	|	|	|	|	|\
+agente -> xylo [1  2   3  94   5 8   5     ]!16<19>^123987^-12\cf0 \
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\fs48 \cf0 MODOS DE COMPORTAMIENTO
+\fs24 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\fs36 \cf0 1. MEL\'d3DICO 
+\fs24 \cf2 agente -> fmsynth [17   88 c   4 27 7      ]<1>(1~16)+24\cf0 \
+Sonidos instrumentales (predefinidos por el programa). N\'fameros que indican notas en la escala. \
+\
+Instrumentos disponibles:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 [ softwgnoise, woodnoise, xylonoise ]\
+\
+[ bar, bass, bell, bengaX, bling, brushsnare, casp, caspRLPF, clap, clarinet, cling, cling2, crackle, deepdubsynth, drop, dubbass, dubchordpad, dubpad, elbass, flute, fmbass, fmsynth, glass, hat, impulse, kick, kick2, kick3, klang, marimba, marimba2, moog, noise, piano, sine, sines, snare, softwg, string, synth, whistle, wood, xylo ]
+\fs32 \cf3 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs24 \cf0 \
+Acciones concretas:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 tuning wcHarm\cf0 : establece el tipo de afinaci\'f3n*\
+\cf2 tuningpush\cf0 : fuerza a todos los agentes a esta afinaci\'f3n.\cf2 \
+scale minor\cf0 : establece la escala de la sesi\'f3n*\
+\cf2 scalepush minor\cf0 : fuerza a todas las escalas a ser menor.\cf2 \
+tonic 70\cf0 : establece la nota de offset (de partida) al valor 70 (valor MIDI)\
+\cf2 a -> (1235)\cf0 : crea un acorde (do, re, mi, sol)\
+\cf2 jarret -> piano [1 2 3 a 4  6   ]\cf0 :  cuando pase por \'93a\'94 tocar\'e1 el acorde establecido antes.\
+\cf2 a -> $-2\cf0 : rebaja dos semitonos (tambi\'e9n sube con n\'famero en positivo) a la fundamental\
+\
+tonality: *evaluando este comando aparece la ayuda de tonalidades y afinaciones.\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 2. PERCUSIVO 
+\fs24 \cf2 agente -> | a sk ljf   po    y    |<19>!6^1987421^-8\cf0 \
+Sonidos de samples (predefinidos por el programa). Letras min\'fasculas y may\'fasculas.\
+(Se pueden editar en el bot\'f3n \'93mapkeys\'94 de inicio)\cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf0 \
+Modificadores:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 morph\cf0 : realiza morphing de un sonido al otro\cf4 \
+agente -> morph |a  lf lt   |\
+\cf2 wipe\cf0 : hace efecto barrido\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf4 agente -> wipe |a  lf lt   |\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 fade\cf0 : realiza fades entre ellos.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf4 agente -> fade@ |a  lf lt   |\
+\'97\'97\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf0 @: realiza loops si fuera necesario (para samples cortos o silencios largos)\cf4 \
+agente -> morph@ |a  lf lt   |\
+\cf0 \
+Samples disponibles:\
+ A  :  bee\
+ B  :  bellrip2\
+ C  :  bellx\
+ D  :  camina2\
+ E  :  snork\
+ F  :  spade\
+ G  :  stretch\
+ H  :  bellrip\
+ I  :  bellrip3\
+ J  :  camina1\
+ K  :  rotatingIron\
+ L  :  snow\
+ M  :  spark\
+ N  :  bee\
+ O  :  bellrip2\
+ P  :  bellx\
+ Q  :  camina2\
+ R  :  snork\
+ S  :  spade\
+ T  :  stretch\
+ U  :  bellrip\
+ V  :  bellrip3\
+ W  :  camina1\
+ X  :  rotatingIron\
+ Y  :  snow\
+ Z  :  spark\
+ a  :  bellrip\
+ b  :  bellrip3\
+ c  :  camina1\
+ d  :  rotatingIron\
+ e  :  snow\
+ f  :  spark\
+ g  :  bee\
+ h  :  bellrip2\
+ i  :  bellx\
+ j  :  camina2\
+ k  :  snork\
+ l  :  spade\
+ m  :  stretch\
+ n  :  bellrip\
+ o  :  bellrip3\
+ p  :  camina1\
+ q  :  rotatingIron\
+ r  :  snow\
+ s  :  spark\
+ t  :  bee\
+ u  :  bellrip2\
+ v  :  bellx\
+ w  :  camina2\
+ x  :  snork\
+ y  :  spade\
+ z  :  stretch\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 3. CONCRETO 
+\fs24 \cf4 agente -> miruido \{4  0  \}!16/2\cf0 \
+Sonidos basados en archivos de audio guardados en la carpeta \\Samples (accesible desde el bot\'f3n \'93project folder\'94)\
+Cada valor num\'e9rico indica el volumen del archivo. Act\'faa como un disparador al que se le pueden a\'f1adir silencios (espacios en blanco) y algunos modificadores.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 3 -> CC\{-4\}-1\cf0 : Reproduce el archivo en sentido reverso.\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 ARGUMENTOS (post partitura)
+\fs24 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 !16\cf0 : inserta 16 beats de silencio antes de repetir la linea de c\'f3digo.\
+\cf2 + \'96 16\cf0 : transporta 16 semitonos (arriba/abajo)\
+\cf2 / * 2\cf0 : Divide/multiplica el tiempo a la mitad/doble (doble de r\'e1pido/ doble de lento)\
+\cf2 (1243)\cf0 : Controla la duraci\'f3n de cada nota (staccato)\
+\cf2 (1~4)\cf0 : alarga el sonido de la nota (act\'faa como un pedal para los sonidos que lo permiten), multiplica por 4: 2 redondas.\
+\cf2 ^8389^\cf0 : Volumen de cada nota (acento)\
+\'85. si los acentos o articulaciones no coinciden con el n\'famero de eventos leer\'e1 en estricto orden de asignaci\'f3n\
+\cf2 <19>\cf0 : Repercute en la panor\'e1mica (1 izquierda, 5 centro, 9 derecha), s\'f3lo para modo percusivo.\
+\cf2 agente))\cf0 : aumenta el volumen en incrementos de 0.05 desde 0 a 2 (tambi\'e9n disminuye con \'93\cf2 agente((\cf0 \'93  )\
+\
+Los operadores tambi\'e9n se pueden cargar a posteriori en una linea nueva:\
+\cf2 + agente 12\cf0 : a\'f1ade 12\
+\cf2 ^ agente 1842\cf0 : define nuevas intensidades\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 M\'c9TODOS (algunas son espec\'edficas de un modo espec\'edfico)
+\fs24 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 doze agente\cf0 : manda a dormir (apaga) el agente\
+\cf2 perk agente\cf0 : lo despierta (enciende)\
+\cf2 nap agente 2\cf0 : calla durante 2 segundos el agente\cf2 \
+shake agente\cf0 : remueve los items\
+\cf2 swap agente\cf0 : cambia el orden de items (mantiene el orden)\
+\cf2 >shift agente 4\cf0 : desplaza los items 4 posiciones a la derecha (tambi\'e9n a la izquierda con \cf2 <\cf0 )\
+\cf2 invert\cf0 : invierte la melod\'eda\
+\cf2 expand\cf0 : expande con un n\'ba de silencios\cf2 \
+revert\cf0 : revierte el orden\cf2 \
+order\cf0 : organiza en el tiempo\cf2 \
+up agente\cf0 : cambia min\'fasculas por may\'fasculas (tambi\'e9n al contrario con \cf2 down\cf0 )\
+\cf2 yoyo agente\cf0 : intercambia aleatoriamente entre may\'fasculas y min\'fasculas\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 COMANDOS
+\fs24 \cf2 \
+\
+tempo 60\cf0 : cambia a 60 el tempo\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 tempo 120:60\cf0 : cambia el tempo a 120 gradualmente en 60 segundos (acelerando/ritardando)\
+\cf2 future 1:10 >> yoyo agente\cf0 : funci\'f3n en el futuro, en este caso realiza el efecto yoyo 10 veces cada 1 segundo.\
+\cf2 future 2b:10 >> - agente 12 5 1\cf0 : funci\'f3n en el futuro, en este caso realiza la resta de 12, 5 y 1 semitono cada 2 compases (\'93bar\'94) durante 10 \
+segundos.\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf2 future 1b:10 >>  - agente2 12 24 52\cf0 : funci\'f3n en el futuro, en este caso va a ir restando cada comp\'e1s (1b) y durante 10 segundos 12, 24, 52 a la altura de las notas del agente2.\
+\pard\pardeftab720
+\cf2 \expnd0\expndtw0\kerning0
+future 1b:5 >> )) ads\cf0 : En este caso creamos un crescendo (tambi\'e9n para diminuendo: \'93((\'93) de 5 segundos, con incrementos a intervalos de 0.05 (unidades de volumen) cada comp\'e1s (1b: one bar)\kerning1\expnd0\expndtw0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 group ff -> agente1 agente2 agente\cf0 : agrupa los 3 agentes dentro de un grupo llamado ff para controlarlos a todos a la vez\
+shake ff, remueve los items de todos los\cf2  agentes.\cf0 \
+\cf2 suicide 10:1\cf0 : se suicida (crash) en 1 segundo (env\'eda textos de broma a la consola). \
+\cf2 hotline\cf0  en caso revertir el suicidio\
+\cf2 snapshot -> one\cf0 : crea una captura llamada \'93one\'94 de la sesi\'f3n (funciona como una memoria)\
+\cf2 snapshot two\cf0 : llama la sesi\'f3n guardada como \'93two\'94\
+\cf2 future 4:12 >> snapshot\cf0 : cada 4 segundos y 12 veces va a llamar aleatoriamente las diferentes snapshots que hayamos guardado\
+\cf2 matrix\cf0 : abre una ventana de 4 x 4 para escribir nombres de sonidos concretos (letras). Presionando TAB se pone en marcha una @ que va pasando \
+por las letras y activa su sonido. Para poder editar los sonidos por defecto y cambiarlos por c\'f3digo propio (supercollider) habr\'e1 que presionar funci\'f3n\
++\'93la letra deseada\'94. Al cerrar la ventana se activa el nuevo c\'f3digo. Para entrar en una letra modificada hay que colocarse a la derecha y teclear: shift+izq,derecha (dos movimientos).\
+\cf2 autocode 8\cf0 : IxiLang programar\'e1 8 lineas de c\'f3digo de manera aleatoria.\
+\cf2 coder\cf0 : abre una ventana en la que se pueden tocar los sonidos percusivos presionando las letras del teclado.\
+\cf2 store looo\cf0 : almacena la sesi\'f3n con el nombre \'93looo\'94\
+\cf2 load looo\cf0 : llama a la sesi\'f3n almacenada \'93looo\'94\
+\cf2 savescore geo\cf0 : guarda la sesi\'f3n con el nombre \'93geo\'94\
+\cf2 playscore geo\cf0 : reproduce la sesi\'f3n guardada con el nombre \'93geo\'94\
+\cf2 kill\cf0 : apaga todo el sonido de la sesi\'f3n\
+\cf2 newrec\cf0 : comienza una nueva sesi\'f3n e ignora todo lo que se ha creado y evaluado con anterioridad. \
+\
+En caso de error en el sonido presionar cmd+. (\'85 requerir\'e1 reiniciar IxiLang)\
+Para abrir un nuevo documento de IxiLang presionar cmd+n y a continuaci\'f3n escribir el comando XiiLang(), y evaluarlo con el comando shift+enter.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs36 \cf0 EFECTOS\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs24 \cf0 reverb\
+reverbS\
+reverbL\
+delay\
+distort\
+cyberpunk\
+bitcrush\
+techno\
+technosaw\
+antique  \
+lowpass\
+tremolo\
+vibrato
+\fs28 \
+
+\fs24 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\fs28 \cf0 MIDI
+\fs24 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 midiclients\cf0 : nos muestra los clientes MIDI disponibles\
+(hay que tener activado el protocolo IAC)\
+\
+\cf2 midiout 0\cf0 : recibir\'e1 la orden de activar lo que est\'e9 enlazado al canal 0\
+\cf2 mojo -> midi [1   ]\cf0 : activa lo que est\'e9 asignado al canal MIDI 1 (enlace con otros softwares)\
+\
+\
+\
+EJEMPLOS\
+Describe lo que hacen los siguientes c\'f3digos:\
+\
+\cf2 mel -> synth [ 3   551   3133    5   ]<8>+54\
+future 1b:12 >> - pulso2 8 16 16 8 0\
+tempo 60:6 \
+nap pulso4 3:20\
+mel -> sines [ 7 53  3  573   ]<1>(1~16)+24\
+do -> moog [1  3  1  3  ]<9>(1~2)-48^2^\
+mel -> deepdubsynth [1  1  5  7  ]<9>(1)/2-40\
+future 4b:12 >> ( pia 1 2428 1214\
+b -> $-7\
+chordag -> synth[1  a  1  b   35 ](818188)\
+order bb 1 3 2 4 3 5\
+future 1:10 >> expand bb 1 \
+future 1b:20 >> shake ff\
+\pard\pardeftab720
+\cf2 \expnd0\expndtw0\kerning0
+future 1b:5 >> )) ads\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cf2 \kerning1\expnd0\expndtw0 nap bb 2\
+! aa 34\
+( aa 1191919 \
+- aa 0\
+- aa 24 \
++ aa 40\
+\
+}
