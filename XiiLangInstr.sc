@@ -34,7 +34,7 @@ XiiLangInstr {
 		// ----------------------------------------------------------------------------------
 
 		synthdesclib = SynthDescLib(project.asSymbol);
-		("ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
+		(Platform.userAppSupportDir+/+"ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
 
 		//("ixilang/default/synthdefs.scd").load; // instead of loadPath
 
@@ -46,7 +46,7 @@ XiiLangInstr {
 		// ----------------------------------------------------------------------------------
 
 		synthdesclib = SynthDescLib(project.asSymbol);
-		("ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
+		(Platform.userAppSupportDir +/+"ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
 
 		// thisProcess.interpreter.executeFile("ixilang/"++project++"/synthdefs.scd");
 		// was - > ("ixilang/"++project++"/synthdefs.scd").loadPath;
@@ -59,7 +59,7 @@ XiiLangInstr {
 
 		// ---------------------- sample based instruments -----------------------------
 		if(loadsamples, {
-			samplePaths = ("ixilang/"++project++"/samples/*").pathMatch;
+			samplePaths = (Platform.userAppSupportDir+/+"ixilang/"++project++"/samples/*").pathMatch;
 			//samplePaths = samplePaths.reject({ |path| path.basename.splitext[1] == "scd" }); // not including the keymapping files
 			//samplePaths = samplePaths.reject({ |path| path.basename.splitext[1] == "ixi" }); // not including the keymapping files
 			sampleNames = samplePaths.collect({ |path| path.basename.splitext[0]});
@@ -934,7 +934,7 @@ Pdef(\test, Pbind(\instrument, \clap, \midinote, Prand([1, 2, 5, 7, 9, 3], inf) 
 		// ----------------------------------------------------------------------------------
 
 		synthdesclib = SynthDescLib(project.asSymbol);
-		("ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
+		(Platform.userAppSupportDir +/+"ixilang/"++project++"/synthdefs.scd").load; // instead of loadPath
 
 		// thisProcess.interpreter.executeFile("ixilang/"++project++"/synthdefs.scd");
 		// was - > ("ixilang/"++project++"/synthdefs.scd").loadPath;
@@ -947,7 +947,7 @@ Pdef(\test, Pbind(\instrument, \clap, \midinote, Prand([1, 2, 5, 7, 9, 3], inf) 
 
 		// ---------------------- sample based instruments -----------------------------
 		if(loadsamples, {
-			samplePaths = ("ixilang/"++project++"/samples/*").pathMatch;
+			samplePaths = (Platform.userAppSupportDir +/+"ixilang/"++project++"/samples/*").pathMatch;
 			//samplePaths = samplePaths.reject({ |path| path.basename.splitext[1] == "scd" }); // not including the keymapping files
 			//samplePaths = samplePaths.reject({ |path| path.basename.splitext[1] == "ixi" }); // not including the keymapping files
 			sampleNames = samplePaths.collect({ |path| path.basename.splitext[0]});
@@ -1825,7 +1825,7 @@ Pdef(\test, Pbind(\instrument, \clap, \midinote, Prand([1, 2, 5, 7, 9, 3], inf) 
 		// else, the instrDict is created by mapping random sound files onto the letters
 
 		var file;
-		if(Object.readArchive("ixilang/"++project++"/keyMapping.ixi").isNil, {
+		if(Object.readArchive(Platform.userAppSupportDir++"/ixilang/"++project++"/keyMapping.ixi").isNil, {
 			instrDict = IdentityDictionary.new;
 			[\A, \a, \B, \b, \C, \c, \D, \d, \E, \e, \F, \f, \G, \g, \H, \h, \I, \i, \J, \j,
 			\K, \k, \L, \l, \M, \m, \N, \n, \O, \o, \P, \p, \Q, \q, \R, \r, \S, \s, \T, \t,
@@ -1834,7 +1834,7 @@ Pdef(\test, Pbind(\instrument, \clap, \midinote, Prand([1, 2, 5, 7, 9, 3], inf) 
 			});
 			" --->    ixi lang : No key mappings were found, so samples will be randomly assigned to keys - see helpfile, or type 'new' and map the keys".postln;
 		}, {
-			instrDict = Object.readArchive("ixilang/"++project++"/keyMapping.ixi");
+			instrDict = Object.readArchive(Platform.userAppSupportDir++"/ixilang/"++project++"/keyMapping.ixi");
 		});
 
 		"The keys of your keyboard are mapped to the following samples :".postln;
@@ -1848,8 +1848,8 @@ Pdef(\test, Pbind(\instrument, \clap, \midinote, Prand([1, 2, 5, 7, 9, 3], inf) 
 
 	createRecorderDoc {arg caller, numChan; // doccolor, oncolor, inbus=8;
 		var doc, buffer, duration, recsynth, recording = false;
-		if(("ixilang/"++project++"/livesamples").pathMatch==[], {
-			("mkdir -p" + ("ixilang/"++project++"/livesamples")).unixCmd; // create the samples folder
+		if((Platform.userAppSupportDir +/+"ixilang/"++project++"/livesamples").pathMatch==[], {
+			("mkdir -p" + (Platform.userAppSupportDir +/+ "ixilang/"++project++"/livesamples")).unixCmd; // create the samples folder
 			"ixi-lang NOTE: a live samples folder was not found for saving scores - It was created".postln;
 		});
 		"CREATING RECORDER".postln;

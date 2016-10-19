@@ -303,7 +303,7 @@ XiiLang {
 
 		// color scheme
 		try{ // check if the color file exists
-			#doccolor, oncolor, activecolor, offcolor, deadcolor = Object.readArchive("ixilang/"++project++"/colors.ixi")
+			#doccolor, oncolor, activecolor, offcolor, deadcolor = Object.readArchive(Platform.userAppSupportDir ++"/ixilang/"++project++"/colors.ixi")
 		};
 		if(doccolor.isNil, {
 			doccolor = Color.black;
