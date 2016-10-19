@@ -1,0 +1,14 @@
+(
+	\name: 		"ixilang",
+	\path: 		"ixilang",
+	\summary:		"XiiLang	 -  a live coding language interpreter",
+	\author: 		"Thor Magnusson",
+	\version:		5.0,
+	\organization: 	"ixi audio",
+	\country: 		"uk - es - is",
+	\since: 		"2000",
+	\ext_dependancy: "see helpfile",
+	\helpdoc:		"XiiLang.html",
+	\url:           "http://www.ixi-audio.net",
+	\dependencies: ["ixiViews"]
+)
