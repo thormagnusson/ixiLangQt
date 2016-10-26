@@ -220,7 +220,7 @@ XiiLang {
 				"insert", "remove", ">shift", "<shift", "invert", "expand", "revert", "up", "down", "yoyo",
 				"order", "dict", "store", "load", "midiclients", "midiout", "matrix", "autocode", "coder", "twitter",
 				"+", "-", "*", "/", "!", "^", "(", "<", "@", "hash", "beer", "coffee", "LSD", "detox", "new", "gui",
-				"savescore", "playscore", "suicide", "hotline", "newrec", "input"];  // removed "." XXX
+				"savescore", "playscore", "suicide", "hotline", "newrec", "input"];  // removed "." XXX"
 
 		if(lang.isNil, {
 			english = true; // might not need this;
@@ -326,34 +326,38 @@ oxo -> |Sdfsdf| \n\n\n") });
 
 		doc.keyDownAction_({|doc, char, mod, unicode, keycode |
 			var string;
-			//keycode.postln;
-			// evaluating code (the next line will use .isAlt, when that is available
-			if(((mod  == 524288) || (mod == 2621440))&& ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)), { // alt + left or up or right or down arrow keys
+			//[mod, keycode, unicode].postln;
+			if( mod.isAlt &&
+				((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||
+					(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)),
+				{ // alt + left or up or right or down arrow keys
 				"eval".postln;
 				//linenr = doc.string[..doc.selectionStart-1].split($\n).size;
 				//doc.selectLine(linenr);
 				string = doc.selectedString; // ++ "\n";
 
 				(string.size < 1).if({"Hilight some text!".warn});
+
+				// alt + left
 				if(keycode==123, { // not 124, 125,
 					this.freeAgent(string);
 				}, {
 					this.opInterpreter(string);
 				});
 			});
-			// create a live sampler doc (fn+Enter)
-			if((mod == 8388864) && (unicode == 3), {
+			// create a live sampler doc (fn+Enter or alt+Enter)
+			if((mod.isFun || mod.isAlt) && (unicode == 3), {
 				ixiInstr.createRecorderDoc(this, numChan);
 			});
 			// tempo tap function (ctrl+, for starting and ctrl+. for stopping (the < and > keys))
-			if(((mod == 262145)||(mod==262401)) && (unicode == 44), {
+			if(mod.isCtrl && (unicode == 44), {
 				if(tapping == false, {
 					time = Main.elapsedTime;
 					tapping = true;
 				});
 				tapcount = tapcount + 1;
 			});
-			if(((mod == 262145)||(mod==262401)) && (unicode == 46), {
+			if(mod.isCtrl && (unicode == 46), {
 				time = Main.elapsedTime - time;
 				tempo = tapcount / time;
 				tapping = false;
@@ -363,7 +367,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 			});
 		});
 		doc.keyUpAction_({|doc, char, mod, unicode, keycode |
-			if(mod == 8388864, {
+			if(mod.isFun, {
 				recdoc.close;
 			});
 		});
