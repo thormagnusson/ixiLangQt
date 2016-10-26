@@ -215,12 +215,12 @@ XiiLang {
 			scoreArray = [];
 		});
 		englishCommands = ["group", "sequence", "future", "snapshot", "->", "))", "((", "|", "[", "{", "~", ")",
-				"$", ">>", "<<", "tempo", "scale", "scalepush", "tuning", "tuningpush", "remind", "help",
+				"\$", ">>", "<<", "tempo", "scale", "scalepush", "tuning", "tuningpush", "remind", "help",
 				"tonality", "instr", "tonic", "grid", "kill", "doze", "perk", "nap", "shake", "swap", "replace",
 				"insert", "remove", ">shift", "<shift", "invert", "expand", "revert", "up", "down", "yoyo",
 				"order", "dict", "store", "load", "midiclients", "midiout", "matrix", "autocode", "coder", "twitter",
 				"+", "-", "*", "/", "!", "^", "(", "<", "@", "hash", "beer", "coffee", "LSD", "detox", "new", "gui",
-				"savescore", "playscore", "suicide", "hotline", "newrec", "input"];  // removed "." XXX"
+				"savescore", "playscore", "suicide", "hotline", "newrec", "input"];  // removed "." XXX
 
 		if(lang.isNil, {
 			english = true; // might not need this;
@@ -508,7 +508,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 			{"->"}{
 				var mode;
 				mode = block{|break|
-					["|", "[", "{", ")", "$", "~"].do({arg op, i;
+					["|", "[", "{", ")", "\$", "~"].do({arg op, i;
 					    var c = string.find(op);
 						if(c.isNil.not, {break.value(i)});
 					});
