@@ -329,7 +329,9 @@ oxo -> |Sdfsdf| \n\n\n") });
 			//[mod, keycode, unicode].postln;
 			if( mod.isAlt &&
 				((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||
-					(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)),
+					(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)||
+					(keycode==37)||(keycode==38)||(keycode==39)||(keycode==40)
+				),
 				{ // alt + left or up or right or down arrow keys
 				"eval".postln;
 				//linenr = doc.string[..doc.selectionStart-1].split($\n).size;
@@ -339,7 +341,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 				(string.size < 1).if({"Hilight some text!".warn});
 
 				// alt + left
-				if(keycode==123, { // not 124, 125,
+				if((keycode==123) || (keycode==37), { // not 124, 125,
 					this.freeAgent(string);
 				}, {
 					this.opInterpreter(string);
