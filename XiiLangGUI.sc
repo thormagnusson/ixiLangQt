@@ -16,7 +16,7 @@ XiiLangGUI  {
 		thisversion = 3;
 		// this.addixiMenu;
 
-		projectsList = Platform.userAppSupportDir +/+ "ixilang/*".pathMatch.collect({arg n; n.basename});
+		projectsList = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch.collect({arg n; n.basename});
 		projectname = projectnamearg ? projectsList[0];
 		projectpath = Platform.userAppSupportDir +/+  "ixilang/"++projectname;
 		filenames = (projectpath++"/samples/*").pathMatch;
@@ -44,8 +44,8 @@ XiiLangGUI  {
 			.value_(projectsList.indexOfEqual(projectname))
 			.action_({arg view;
 				projectname = projectsList[view.value] ;
-				projectpath = Platform.userAppSupportDir +/+ "ixilang/*".pathMatch[view.value];
-				projectsList = Platform.userAppSupportDir +/+ "ixilang/*".pathMatch.collect({arg n; n.basename});
+			projectpath = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch[view.value];
+			projectsList = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch.collect({arg n; n.basename});
 				filenames = (projectpath++"/samples/*").pathMatch;
 				filenames = filenames.collect({arg file; file.basename});
 				filenames = filenames.reject({ |file| file.splitext[1] == "scd" }); // not including the keymapping files
