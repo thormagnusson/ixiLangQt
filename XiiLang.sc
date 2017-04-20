@@ -755,10 +755,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 				this.getMethodsList;
 			}
 			{"help"}{
-				//XiiLang.openHelpFile;	 // ixi lang doesn't have the new helpfile format
-				//(XiiLang.filenameSymbol.asString.dirname++"/XiiLang.html").openTextFile;
-				WebView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5).url_(XiiLang.filenameSymbol.asString.dirname++"/XiiLang.html").enterInterpretsSelection_(true);
-
+				XiiLang.openHelpFile;
 			}
 			{"tonality"}{
 				var doc;
@@ -1206,7 +1203,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 				charloc = doc.selectionStart;
 
 				//charloc = string.findAll(" ")[1]+1;
-				{doc.insertTextRange("\n", charloc, 0)}.defer;
+				{doc.setString("\n", charloc, 0)}.defer;
 				lines = "";
 				string.collect({arg char; if(char.isDecDigit, { lines = lines++char }) });
 				lines = lines.asInteger;
@@ -1248,11 +1245,11 @@ oxo -> |Sdfsdf| \n\n\n") });
 							};
 						line.do({arg char, i;
 							charloc = charloc + 1;
-							{doc.insertTextRange(char.asString, charloc, 0)}.defer;
+							{doc.setString(char.asString, charloc, 0)}.defer;
 							[0.1, 0.05, 0.5].wchoose([0.5, 0.4, 0.1]).wait;
 						});
 						1.wait;
-						this.opInterpreter(line);
+					{this.opInterpreter(line.postln)}.defer;
 					});
 				}.fork(TempoClock.new);
 			}
@@ -2564,7 +2561,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 				};
 			});
 		});
-		^[stringstart, stringend];
+		^[stringstart ? 0, stringend ? 0];
 	}
 
 	// modearray is an array with three booleans stating if the method can be applied on that mode
