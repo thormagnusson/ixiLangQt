@@ -326,6 +326,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 
 		doc.keyDownAction_({|doc, char, mod, unicode, keycode |
 			var string;
+			var returnVal = nil;
 			//[mod, keycode, unicode].postln;
 			if( mod.isAlt &&
 				((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||
@@ -346,10 +347,12 @@ oxo -> |Sdfsdf| \n\n\n") });
 				}, {
 					this.opInterpreter(string);
 				});
+				returnVal = true;
 			});
 			// create a live sampler doc (fn+Enter or alt+Enter)
 			if((mod.isFun || mod.isAlt) && (unicode == 3), {
 				ixiInstr.createRecorderDoc(this, numChan);
+				returnVal = true;
 			});
 			// tempo tap function (ctrl+, for starting and ctrl+. for stopping (the < and > keys))
 			if(mod.isCtrl && (unicode == 44), {
@@ -367,6 +370,7 @@ oxo -> |Sdfsdf| \n\n\n") });
 				" --->   ixi lang Tempo : set to % BPM\n".postf(tempo*60);
 				TempoClock.default.tempo = tempo;
 			});
+			returnVal
 		});
 		doc.keyUpAction_({|doc, char, mod, unicode, keycode |
 			if(mod.isFun, {
