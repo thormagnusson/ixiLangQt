@@ -57,6 +57,7 @@ XiiLangMatrix {
 			//	.promptToSave_(false)
 				.keyDownAction_({arg doc, key, mod, unicode, keycode;
 					var loc, loccol, locrow, selsize;
+			var returnVal = nil;
 					[doc, key, mod, unicode, keycode].postln;
 
 					loc = doc.selectionStart;
@@ -67,18 +68,19 @@ XiiLangMatrix {
 					if(loccol==size, {loccol = loccol-1});
 
 					{doc.parent.name_("matrix"+loccol.asString+locrow.asString)}.defer(0.1);
-\deb0.postln;
+			\deb0.postln;
+			//matrix.postcs;
+			//instrDict.postcs;
 					if(key.isNil.not, {
 						if(key.isAlpha, { // all chars possible, no arrows and nums
-						if((doc.string[loc] == " "), { // no char into a space
-							\deb00.postln;
-							//doc.string_(" ", loc, 2);
+						if((doc.string[loc].asString == " "), { // no char into a space
+							doc.setString(" " ++ key.asSymbol, loc, 2);
 						}, {
-							\deb01.postln;
-							//doc.string_("", loc, 1);
+							doc.setString("" ++ key.asSymbol, loc, 1);
 						});
 						\deb1.postln;
-						if((mod == 2097152) || (mod == 131072) || (mod == 0) || (mod == 10486016), { // holding down fn (and optinally shift) opens a coding window
+						if((mod == 2097152) || (mod == 131072) || (mod == 10486016),
+						{ // holding down fn (and optinally shift) opens a coding window
 							\deb11.postln;
 
 							if(matrix[locrow][loccol].instr == "none", { // just insert the synthdef from the instrDict
@@ -89,7 +91,7 @@ XiiLangMatrix {
 							});
 							\deb13.postln;
 
-							//codeDoc.value(loccol, locrow, key, true); // imposed key does not exist
+							codeDoc.value(loccol, locrow, key, true); // imposed key does not exist
 						},{ // default is keys from instrDict (as mapped by instrDict)
 							matrix[locrow][loccol].char = key;
 							// parsing the code
@@ -100,7 +102,7 @@ XiiLangMatrix {
 								matrix[locrow][loccol].sccode  = charDict[key.asSymbol].sccode;
 //								[\code, matrix[locrow][loccol].sccode].postln;
 							});
-							matrixCopy = matrix.copy;
+							matrixCopy = matrix.copy.postln;
 							// store the latest info in the charDict, so it will be set on next key
 							charDict[key.asSymbol] = ().add(\instr -> matrix[locrow][loccol].instr)
 											.add(\note -> matrix[locrow][loccol].note)
@@ -108,6 +110,7 @@ XiiLangMatrix {
 											.add(\wait -> matrix[locrow][loccol].wait)
 											.add(\sccode -> matrix[locrow][loccol].sccode);
 						});
+					returnVal = true;
 					});
 \deb2.postln;
 					if(key.isDecDigit, { // if number, then it sets the nextX or nextY (depending on direction)
@@ -116,28 +119,33 @@ XiiLangMatrix {
 						}, {
 							matrix[locrow][loccol].nextY = key.asString.asInteger;
 						});
+					returnVal = true;
 					});
 					if(key == $., { // full stop will remove instrument but keep timing and code
-						if((doc.string(loc) == " "), { // no char into a space
-							doc.string_(" ", loc, 2);
+						if((doc.string[loc].asString == " "), { // no char into a space
+							doc.setString(" " ++ key.asSymbol, loc, 2);
 						}, {
-							doc.string_("", loc, 1);
+							doc.setString("" ++ key.asSymbol, loc, 1);
 						});
 						matrix[locrow][loccol].instr = "none";
 						matrix[locrow][loccol].char = ".";
+					returnVal = true;
 					});
 					if(selsize==1, {
 						codeDoc.value(loccol, locrow, key, true); // force open the code window
 					});
 					if(keycode == 48, { // use TAB to start a tempoclock
 						start.value(loccol, locrow);
+					returnVal = true;
 					});
 					if(keycode == 51, { // use DELETE to stop the last tempoclock
 						clockArray.last.stop;
-						clockArray.removeAt(clockArray.size-1);
+					if(clockArray.size > 0, {clockArray.removeAt(clockArray.size-1);});
+returnVal = true;
 					});
 						});
 						\deb3.postln;
+			returnVal;
 				})
 				.onClose_({
 					clockArray.do({arg clock; clock.clear });
