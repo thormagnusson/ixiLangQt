@@ -319,7 +319,11 @@ XiiLang {
 		doc.font_(Font("Monaco", 16));
 		if(txt == false, { doc.string_("oo -> |asdf|
 matrix 8
-oxo -> |Sdfsdf| \n\n\n") });
+oxo -> |Sdfsdf| \n\n\n") },
+		{
+			doc.string_(txt);
+		}
+		);
 		doc.setProperty(\styleSheet, "color:white"); // set the cursor to white
 		doc.setStringColor(oncolor, 0, 100000); // then set the text color to whatever the user has specified
 
