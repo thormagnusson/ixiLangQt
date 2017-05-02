@@ -1,0 +1,806 @@
+TITLE:: XiiLang
+summary:: a live coding language interpreter
+categories:: ixilang
+
+DESCRIPTION::
+The ixi lang live coding environment is a simple visual system presenting a high entry-level control over synth definitions and samples in SuperCollider. The core idea is to represent events in a spatial layout, thus merging musical code and musical scores. The score of an ixi lang agent is reactive, i.e., if a method is performed upon the score, it changes in real time.
+
+
+NOTE:: The interpreter uses a different key command for evaluating ixi lang code, namely alt+arrows.
+::
+
+This allows for coding in both sc lang and ixi lang in the same document without confusing interpreters.
+
+
+Further explanation below, but videos can be found on www.vimeo.com/ixi
+
+A paper on ixi lang for the 2011 ICMC conference can be found here www.ixi-audio.net/thor
+
+For more information and feedback contact: thor@ixi-audio.net and updates on ixi lang (+ other stuff) here http://www.twitter.com/thormagnusson
+
+
+
+subsection:: Folder structure of ixi lang:
+
+
+The ixi lang app (or your SuperCollider app) will have a folder called "ixilang" next to it. In there you keep your projects. The project name is the name you give the folder inside the ixilang folder. Each project will have the following items:
+
+
+LIST::
+## colors.ixi (a file storing the color values of your coding envrionment);
+
+## keyMapping.ixi (a document storing the mapping between keys and samples);
+
+## recordings folder (where recordings will appear if you use the "rec" button);
+
+## samples folder (where you keep your short samples that you map to the keys of the keyboard);
+
+## scores folder (where scores are saved); sessions folder (where environments are stored);
+
+## synthdefs.scd file where you can put synth definitions that will appear in the key mapping GUI).
+
+## livesamples folder (where samples are recorded in a live situation)
+::
+
+Each project (or do you want to call it a "piece"?) can therefore have its own colour code, samples and key mappings.
+
+
+
+subsection:: Having Problems? Here is a quick troubleshooting:
+
+
+You need to make sure you're evaluating the code with alt+arrow keys (and not the SuperCollider default - read about that below). Don't use TABs when coding, only spaces. Do you have a "samples" folder within a "default" folder next to your SuperCollider.app (i.e., ixilang/default/samples )? Put some short sounds into that folder. When you've figured this out, you can start to create your own project folders, not using the "default" anymore.
+
+Finally, if you get a message saying samplerate 44100 != 48000 or the like, go into your Audio MIDI Setup.app and set the input and output sample rate to 44100 Hz.
+
+
+
+subsection:: The three modes of ixi lang:
+
+
+The ixi lang presents three different modes in ixi lang: melodic mode, rhythmic mode and concrète mode.
+
+code::
+agentname  ->   marimba[1    4    3    2    ]  // square brackets indicate melodic score (synthesis or samples)
+
+agentname  ->   |o   x    o s x   |   		// the "|" symbol indicates percussive score (samples or synthesis)
+
+agentname  ->   sndname{0   1   2   8   }	// curly brackets indicate concrète score (samples)
+::
+
+NOTE: for non-programmers the "|" symbol is a vertical bar, often called a pipe and should not be confused with a lowercase "L". For programmers, it's the symbol you use for OR (or "\|\|").
+
+
+In general, when running a command use one space between words. Good practice is the following:
+
+code::
+future 4:12 >> swap agentname
+::
+
+subsection:: Creation of ixi lang:
+
+
+	*new (project name, key)
+
+
+
+		project name - The name of your project. Represents a folder name. Default value is "default".
+
+		key - The key of the session (important if playing with other instrumentalists). Default value is "C".
+
+
+code::
+		// inline example
+
+		XiiLang();
+
+		or
+
+		XiiLang.new("yourprojectname", "E");
+::
+
+
+subsection:: Getting help in ixi lang (type command and ixi evaluate):
+
+definitionlist::
+
+	## remind
+		|| Opens a document with instructions of what ixi lang has in store.
+
+	## tonality
+		|| Opens a document listing available scales and tunings.
+
+	## instruments
+		|| Listing all registered instruments (although any synthdef on the system can be used).
+
+	## help
+		|| Opens this document.
+::
+
+subsection:: Operators of ixi lang:
+
+definitionlist::
+	## ->
+|| Assignment operator: it assigns a score to an agent (see example below)
+
+	## >>
+|| Route agent through an effect. (see example below)
+
+	## <<
+|| Remove effect from an agent. (see example below)
+
+	## ))
+|| Increase the amplitude of an agent. (see example below)
+
+	## ((
+	|| Reduce the amplitude of an agent. (see example below)
+::
+
+subsection:: The three score modes of ixi lang:
+
+subsection::	[ ... ]		Melodic score
+	Here notes are played in a scale from 1 to 9, where 1 is the tonic.
+
+	Spaces (or full stops - new in v3) represent silence. Additional arguments are
+
+				! for inserting a silence after the score
+
+				+ or - for transposition in pitch
+
+				* or / for increasing or decreasing the timing as multiplied or divided by an integer
+
+				^^ for accents (volume of each note, e.g. ^1418^)
+
+				() for note sustain (duration of each note (wholenote = 1, halfnote = 2, quarternote = 4, etc)
+
+				<> for panning (1 being the left speaker, 5 middle and 9 the right speaker, e.g, <15289>)
+
+
+			Melodic scores can use any Pattern-ready synthdef on your system, or samples that have
+
+			been loaded into XiiLangInstr (see class). A special case is the "midi" instrument, i.e., it is
+
+			not a synth definition, but sends MIDI messages out on a specific MIDI channel.
+
+
+subsection::	| ... |		Percussive score
+		Here samples (or synthdefs) are mapped to keyboard keys
+
+			(see keyMappings.ixi). Spaces (or full stops - new in v3) represent silence.
+
+			Additional arguments are
+
+				! for inserting a silence after the score
+
+				+ or - for transposition in pitch
+
+				* or / for increasing or decreasing the timing as multiplied or divided by an integer
+
+				^^ for accents (volume of each note, e.g. ^1418^)
+
+				() for note sustain (duration of each note (wholenote = 1, halfnote = 2, quarternote = 4, etc)
+
+				<> for panning (1 being the left speaker, 5 middle and 9 the right speaker, e.g, <15289>)
+
+
+			The percussive score can create various types of timbral transitions between the sonic events in
+
+			the score. The available transitions are: morph, fade, wipe, minus, common, binwipe, copy, mul,
+
+			subtract, rand, smear, comb, low, band. Those can be used with the sound looping or playing
+
+			only once, using the % symbol.
+
+			(e.g.,   ringo ->  morph|a   b   c   d   |    (not looping)    or     ringo ->  fade%|a   b   c   d   |)
+
+
+
+subsection::	{ ... }		Concrete score
+			Here longer samples can be played and their amplitude controlled.
+
+			Spaces (or full stops - new in v3)  do not represent silence. Additional arguments are
+
+				! for inserting a silence after the score
+
+				* or / for changing the scores duration.
+
+				<> for panning (1 being the left speaker, 5 middle and 9 the right speaker, e.g, <15289>)
+
+
+
+subsection:: Meta agents (new in version 4)
+
+
+	~ ... ~	Meta agents. Here agents (and groups or other meta agents) can be sequenced. An argument
+
+			is provided for how many times it is repeated. Example:   mymeta -> ~ agA 2 agB 4 ~
+
+
+
+
+
+subsection:: Post-score operators in ixi lang:
+
+definitionlist::
+	## !
+			|| Will create a silent part in the score according to the argument given. (e.g., !16 is sixteen silent notes)
+
+
+
+	## +
+			|| Transpose the score in MIDI notes. (for example +7 will be a fifth higher than the note written, and -12 will be an octave lower).
+
+
+
+	## *
+			|| Will multiply the duration of the array (not note lengths in the array).
+
+
+
+	## /
+			|| Will divide the duration of the array (not note lengths in the array).
+
+
+	## ()
+			|| Arguments in brackets are note sustain. (1 is one beat, 2 is half, 4 quarter and 8 is eight). Can be multiplied with the _ symbol, so (1_4) is a whole note in a 4/4 time signature.
+
+
+
+	## ^
+		|| Arguments in caret symbols are accents (9 is highest amplitude, 0 is silence). This is relative to the agent's general amplitude.
+
+
+## 	<>
+			|| Arguments between arrows are panning (1 is left, 5 is centre, 9 is right ).
+
+
+	## @
+			|| Number of times the agent will play. Example: oo -> wood[1 3 2  4 ]@4
+
+::
+
+subsection:: Methods of ixi lang (put in front of agents, as in verb-noun-adjective):
+
+definitionlist::
+## doze		|| Set the agent to sleep
+## perk  ||	Wake the agent, if sleeping
+##	nap	||	Sleep for a N number of seconds. If 2nd argument, then this is repeated N2 times. (e.g., nap miles 2:4 )
+##	shake || 	Shake the score of an agent, practically scrambling all items
+##	swap  ||	Swap items in the score of an agent
+##	replace  ||	Replace new items into the score of an agent (in place)
+## insert || 	Insert new items into the score of an agent (not in place)
+## remove || 	Remove items from the score of an agent
+##	slide || 	Slide the score with a certain windowlength (1st argument) and stepsize (2nd argument)
+##	>shift ||	Right shift the score by N number of places (e.g., >shift jimi 6 )
+##	<shift ||	Left shift the score by N number of places (e.g., <shift jimi 6 )
+##	inverse  ||	In melodic scores, inversion of the melody as in twelve-tone technique
+##	expand  ||	Expand the score of an agent by N spaces in between notes
+##	reverse  ||	Reverse the score of an agent
+##	up 	||	In percussive scores, this method turns lower case letters to upper case
+##	down ||	In percussive scores, this method turns upper case letters to lower case
+##	yoyo ||	In percussive scores, this method scrambles the score to a mix of upper and lower cases
+##	scale ||	As below, but here you can set the scale of individual agent (e.g., scale paul minor)
+##	)) 	||	Increase volume. Can be used with future (e.g., future 0.1:5 >> )) paul ).
+##	(( 	||	Decrease volume. Can be used with future.
+::
+
+NOTE::	The post score operators (above) can also be used in the syntax of these methods	(in ixi lang "verbs") for example: < ringo 1253742 (which reads like "pan ringo to these locations")
+::
+
+
+
+
+subsection:: Commands in ixi lang:
+
+definitionlist::
+##	tonic	|| Set the tonic of the performance (as MIDI note value)
+##	scale || 	Set the scale of the performance (for all agents evaluated after this event)
+##	scalepush || 	Set the scale of the performance (for all agents, also those playing)
+##	tuning  ||	Set the tuning of the performance (for all agents evaluated after this event - type "tonality" to see tunings - see below)
+##	tuningpush  ||	Set the tuning of the performance (for all agents, also those playing)
+##	tempo	|| Set the tempo of performance ( destination tempo: n seconds) (e.g., tempo 120:2 )
+##	future  ||	Schedule event in the future (in sec:times or bars:times) (e.g., future 2:2 >> shake jimi or future 2b:2 >> shake jimi). To remove the scheduling use: future << jimi.
+##	grid || 	Draw a grid with n spaces (e.g., grid 8 )
+##	kill  	||	Stop all sounds and future tasks of this window
+##	remind  ||	Get a document listing the functions of ixi lang
+##	help || 	Get this document
+##	instruments  ||	Get a list of instruments
+##	tonality  ||	Get a list of scales and tunings
+##	group || 	Group together, under one name, various agents. This is handy for control.
+##	sequence  ||	Sequence agents linearly. This will create a new agent, but not stop running agents.
+##	snapshot ||	Take a snapshot of the agent's scores and instruments for recalling later.
+##	suicide ||	Live dangerously! Allow ixi lang to crash in your live coding session.
+##	hotline ||	In case you change your mind with regards to the suicide.
+##	midiclients ||	Get a list of the MIDI clients (ports) available on your system.
+##	midiout ||	Set the MIDI port (as in midiclient 2) and initiate a MIDI clock on that port (can slave other software, such as Ableton).
+##	coder ||	Opens up a new ixi lang window where all keystrokes result in sounds.
+##	autocode	||	Will write and evaluate N number of lines of code. Now check email on stage?
+##	matrix ||	Opens up a matrix window. A dynamic state machine that can be adopted in real time (hit fn+key to get to code)
+##	store ||	Stores the environment of a session (with agents, groups, snapshots and effects) to be loaded up later
+##	load	||	Load a stored session and start playing as you left the system
+##	savescore ||	Record your session (from start) to be played back later (different from store/load)
+##	playscore||	Playback a session (do you want to listen to how your live gig sounded?). You can also play it back asking for a new variation (where the algorithmic decisions taken throughout the piece are different from the score you recorded). eg. [playscore myscore myvariation]
+##	newrec	||	Eraze all memory of the performance, if you use "savescore" it will record everything from the time you issued this command
+##	new	||	Open up a GUI window to start a new project or create a new key mapping.
+##	gui	||	Same as new.
+
+::
+
+subsection:: Available Audio Effects in ixi lang (w/ hardcoded parameters):
+
+definitionlist::
+##	reverb	|| A decent space reverb
+##	reverbS	|| A small space reverb
+##	reverbL || 	A large space reverb
+##	delay	|| A decent delay
+##	distort	|| A decent distortion
+##	cyberpunk || 	A good healthy effect
+##	bitcrush	|| A jolly sounding effect
+##	techno	|| An old trick of sweeping filter
+##	antique || 	A lowpass and some vinyl scratches
+##	lowpass	|| What it says on the tin
+##	tremolo	|| Amplitude variation
+##	vibrato	|| Pitch variation
+
+::
+
+subsection:: Creating agents in ixi lang
+
+
+By creating an agent (agentname -> .... ), you create a space where a score can be performed. The agent can play any type of score (melodic, percussive or concrète). The agent name is then used when assigning effects or applying methods.
+
+
+The agent is assigned a score by hitting alt + arrow keys. Any arrow can be used, with ONE exception, where command + left arrow on an agent line will kill that agent (and turn the text red). It will not wake up with a perk command, but has to be reevaluated with commend + right.
+
+
+
+subsection:: Real time recording of sounds into keys
+
+
+By hitting "fn" and Return, a window opens up that tells you to press any key to record a new sound "into it". You simply hold down the key and it records until you release the key. The sounds will be stored in the "livesamples" folder, so if you want to use them at a later stage, you move them into the samples folder and map them to the key you want.
+
+
+
+subsection:: Tempo tapping
+
+
+You can set the tempo of ixi lang by tapping on the keyboard. Just hold down ctrl and then start tapping on the "," key until you want to stop and then indicate that with the "." key (on a UK keyboard thesa are also the "<" and ">" keys). The tempo will then be calculated and set.
+
+
+
+subsection:: On XiiLangInstr
+
+
+See: XiiLangInstr (highlight and hit alt+y to view)
+
+
+The ixi lang instruments class stores the available instruments. Synthdefs are added when the class is run, but you can use any pattern-ready synth definition you have on your system. Synth Definitions are mapped onto keys on the keyboard, and when the language is run it creates synth definitions with the same names as your samples. This mapping is random unless a special keyMapping.ixi file is present in the sample folder where keys are mapped to the NAME of the sound. Mono and short sounds are ideal.
+
+
+Use the command "new" go get the GUI where you can create your keymapping file.
+
+
+If you want to use specific synth definitions for your project and map to the keys, you can create a synthdefs.scd file in your project folder. Make sure you add your synthdefs with the name of the project (e.g., SynthDef(\myDef, {bla bla}).add(\myProject), if you want to be able to map your synthdefs to keys using the keymapping GUI.
+
+
+
+subsection:: ixi lang Sattellites:
+
+
+subsection:: The Coder:
+
+
+
+Opens up an ixi lang coding file, just as normally, except every keystroke is "sounded" as per key mapping. This makes it possible to live code in more "real-time" than when there is a delay between writing a score and executing it.
+
+
+subsection:: The Matrix:
+
+
+The Matrix is a sequencer where you can place samples, notes or SuperCollider code. Write letters into the matrix and those are containers of a function (which can be to trigger a sound or to run SuperCollider code). To control the cell the key combination of "fn" + the key value you want is used. Hit the TAB to start an actor and hit delete to remove it.
+
+
+The following variables are available as globals and make it possible to create complex patterns.
+
+code::
+	~instr = \string; 	// set the instrument to string
+
+	~note  = 60;		// the note value of the instrument
+
+	~amp   = 0.5;		// amplitude
+
+	~wait  = 0.25;	// how long the agent waits on this cell
+
+	~nextX = 3;		// which X (horizontal column to enter next)
+
+	~nextY = 1;		// which Y (vertical row to enter next)
+::
+
+In the sccode: field, this can be coded using the SC lang (the language of SuperCollider):
+
+
+code::
+~nextX = 5.rand;
+::
+
+The Matrix is a bit of a riddle. You have to explore it yourself!
+
+
+subsection::: Example of a ixi lang session with comments:
+
+code::
+// remove comments and run this line in an EMPTY document and the ixi lang interpreter is launched (here you use SHIFT + RETURN)
+
+// or better use the demosession.scd file within the ixi lang folder
+
+
+XiiLang(txt:true)
+
+
+tuning just		// choose a tuning (remember to use the ixi lang evaluation (Alt + right arrow)
+
+scale minor		// set the scale
+
+
+
+// melodic score
+
+jimi     ->       string[1   2    6    2   ]  	// here we have an agent called jimi, playing four notes
+
+
+jimi     ->       string[1   2    6    2   ]+12  	// same as above but transposed up an octave (MIDI notes)
+
+
+jimi     ->       string[1   2    6    2   ]!16  	// ! 16 makes silence for 16 notes before playing again
+
+
+jimi     ->       string[1   2    6    2   ]+12!16(12) // this can be combined - and alternating between whole and half notes
+
+
+jimi     ->       string[1   2    6    2   ]+12(12~8) //  alternating between whole and half notes but note sustain is multiplied by 8
+
+
+midiclients	// want to send midi out to another app?
+
+
+midiout 2		// send out on bus 2
+
+
+jarret  	-> 		midi[1   4   2  1      ]+12	// sending out midi on channel 1
+
+
+jarret  	-> 		midi[1   4   2  1      ]c5 	// sending out midi info on channel 5
+
+
+a -> (135)	// a chord can be defined in brackets and assigned to a character (one letter only)
+
+
+jarret -> piano[1   3   5       a        ]	// the chord is then played inside the score
+
+
+a -> $16 	// 16 semitones above the fundamental
+
+
+b -> $24	// two octaves above
+
+
+c -> (158ab)	// a chord with a tonic, a fifth, an octave, a third, and two octave above
+
+
+bb -> piano[1 2 3 a b c c ]
+
+
+// or as here below, jack a minor chord into a major scale
+
+scale major
+
+a -> $3
+
+c -> (1a5)
+
+d -> (135)
+
+bb -> piano[1 2 a 3 4 5   c   d   ](1)
+
+
+
+// percussive score
+
+ringo    ->             |o   x    o    x   |	// here o is mapped to a bass drum and x to a snare drum
+
+
+ringo2   ->             |      ii   s    n | (1148)	// here the notes get durations (two whole notes, a quarter and ab eigth)
+
+
+ringo3 	-> 			|c c c c |!2^1219^		// expanded by two and the accents are of amplitude 1 2 1 and 9 (relative to general amp)
+
+
+ringo4   ->             |       o o d sd   |!12	// ! 12 inserts silence for 12 beats
+
+
+
+// concrète score
+
+pierre 	->     water{0        2   8         4    1 0       }	// numbers are amplitude
+
+
+henry 	->     water{0        2   8         }!14	// last amp value is extended by 14 beats
+
+
+schaeffer ->    water{0        2   8         }*4!14	// duration is multiplied by 4 and same as above
+
+
+
+
+jimi ))  	// increase the volume of jimi
+
+
+jimi >> delay 	// add one effect to jimi's output
+
+
+jimi >> distort >> reverb  // put jimi through distortion and reverb effects
+
+
+jimi << distort	// remove distortion but not the reverb effect
+
+
+jimi << 	// remove all effects
+
+
+shake jimi  	// scramble jimi's score
+
+
+future 2:4 >> swap jimi 	// in 2 seconds time, swap jimi's score. Do this 4 times
+
+
+future 2b:4 >> swap jimi 	// every 2 bars, swap jimi's score. Do this 4 times
+
+
+tempo 60		// set the tempo
+
+
+tempo 120:10	// set the tempo to 120 in 10 seconds
+
+
+group funnyband -> ringo jimi 	// create a new group
+
+
+doze band		// make the band stop
+
+
+perk band 	// restart the bandmembers
+
+
+sequence drumbo -> ringo ringo2	// create a new sequence of two sequences
+
+
+snapshot -> one 	// take a snapshot of the agent states
+
+
+snapshot one		// recall the snapshot
+
+
+swap jimi  	// swap jimi's score
+
+
++ jimi 12 	// add 12 as an argument to the score (transposing octave up)
+
+
+^ jimi 1842 	// setting the amplitude arguments of jimi
+
+
+future 2b:12 >> + jimi 7 12 0 	// every 2 bars, transpose jimi's score to the tailing arguments
+
+
+snapshot -> two 	// take a snapshot of the agent states
+
+
+snapshot two		// recall the snapshot
+
+
+future 3:12 >> snapshot 	// recall a random snapshot every 3 seconds (12 times)
+
+
+autocode 4 	// create four lines of automatic code writing
+
+
+save mysession 	// save a session with a unique name
+
+
+load mysession	// load that session at a later time
+
+
+help 	// get this file
+
+
+/// Experimental
+
+
+Using ixi lang in normal SC code:
+
+
+// when creating an agent, the string has to go in
+
+"aa -> xylo[2 3 4 ]".ixilang(0, newagent:true) // 1st arg: document nr, 2nd arg: new agent
+
+"axa -> xylo[2 3 4 8 3 ]".ixilang( newagent:true)
+
+
+// if doc number is nil, a new window is created.
+
+
+// then one can give it any ixi lang action:
+
+"doze axa".ixilang(0)
+
+"perk axa".ixilang(0)
+
+::
+
+CLASSMETHODS::
+
+METHOD:: new
+argument:: project
+argument:: keyarg
+argument:: txt
+argument:: newdoc
+argument:: language
+argument:: dicts
+argument:: score
+argument:: numChannels
+
+
+INSTANCEMETHODS::
+
+METHOD:: opInterpreter
+argument:: string
+argument:: return
+
+METHOD:: parseScoreMode0
+argument:: string
+argument:: return
+argument:: snapshot
+
+METHOD:: initEffect
+argument:: string
+
+METHOD:: makeEffectDict
+
+METHOD:: addixiMenu
+
+METHOD:: playScoreMode1
+argument:: agent
+argument:: notearr
+argument:: durarr
+argument:: sustainarr
+argument:: attackarr
+argument:: panarr
+argument:: instrument
+argument:: quantphase
+argument:: newInstrFlag
+argument:: midichannel
+argument:: repeats
+argument:: return
+argument:: snapshot
+
+METHOD:: playScore
+argument:: score
+
+METHOD:: initXiiLang
+argument:: project
+argument:: keyarg
+argument:: txt
+argument:: newdoc
+argument:: lang
+argument:: dicts
+argument:: score
+argument:: numChannels
+
+METHOD:: parseChord
+argument:: string
+argument:: mode
+
+METHOD:: swapString
+argument:: doc
+argument:: pureagentname
+argument:: newscore
+argument:: modearray
+argument:: newarg
+argument:: return
+
+METHOD:: inbus
+
+METHOD:: findStringStartEnd
+argument:: doc
+argument:: pureagentname
+
+METHOD:: parseMethod
+argument:: string
+argument:: return
+
+METHOD:: getMethodsList
+
+METHOD:: interpret
+argument:: cmd
+
+METHOD:: decreaseAmp
+argument:: string
+
+METHOD:: freeAgent
+argument:: string
+
+METHOD:: parseScoreMode1
+argument:: string
+argument:: return
+argument:: snapshot
+
+METHOD:: parseScoreMode2
+argument:: string
+argument:: return
+argument:: snapshot
+
+METHOD:: playScoreMode2
+argument:: agent
+argument:: pitch
+argument:: amparr
+argument:: durarr
+argument:: panarr
+argument:: instrument
+argument:: quantphase
+argument:: newInstrFlag
+argument:: repeats
+argument:: return
+argument:: snapshot
+
+METHOD:: removeEffect
+argument:: string
+
+METHOD:: updateInstrDict
+argument:: char
+
+METHOD:: oncolor
+
+METHOD:: playScoreMode0
+argument:: agent
+argument:: notearr
+argument:: durarr
+argument:: instrarr
+argument:: sustainarr
+argument:: attackarr
+argument:: panarr
+argument:: quantphase
+argument:: newInstrFlag
+argument:: morphmode
+argument:: repeats
+argument:: return
+argument:: snapshot
+
+METHOD:: increaseAmp
+argument:: string
+
+METHOD:: envirSetup
+argument:: txt
+argument:: newdoc
+argument:: project
+
+METHOD:: createMetaAgent
+argument:: string
+
+METHOD:: doccolor
+
+METHOD:: doc
+
+METHOD:: parsePostfixArgs
+argument:: postfixstring
+
+METHOD:: parseSnapshot
+argument:: string
+
+METHOD:: getInstrumentsList
+
+
+EXAMPLES::
+
+code::
+_some_example_code_
+::

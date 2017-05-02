@@ -16,9 +16,9 @@ XiiLangGUI  {
 		thisversion = 3;
 		// this.addixiMenu;
 
-		projectsList = "ixilang/*".pathMatch.collect({arg n; n.basename});
+		projectsList = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch.collect({arg n; n.basename});
 		projectname = projectnamearg ? projectsList[0];
-		projectpath = "ixilang/"++projectname;
+		projectpath = Platform.userAppSupportDir +/+  "ixilang/"++projectname;
 		filenames = (projectpath++"/samples/*").pathMatch;
 		filenames = filenames.collect({arg file; file.basename});
 		filenames = filenames.reject({ |file| file.splitext[1] == "scd" }); // not including the keymapping files
@@ -44,8 +44,8 @@ XiiLangGUI  {
 			.value_(projectsList.indexOfEqual(projectname))
 			.action_({arg view;
 				projectname = projectsList[view.value] ;
-				projectpath = "ixilang/*".pathMatch[view.value];
-				projectsList = "ixilang/*".pathMatch.collect({arg n; n.basename});
+			projectpath = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch[view.value];
+			projectsList = (Platform.userAppSupportDir +/+ "ixilang/*").pathMatch.collect({arg n; n.basename});
 				filenames = (projectpath++"/samples/*").pathMatch;
 				filenames = filenames.collect({arg file; file.basename});
 				filenames = filenames.reject({ |file| file.splitext[1] == "scd" }); // not including the keymapping files
@@ -136,7 +136,7 @@ XiiLangGUI  {
 			var ixiLangInstr;
 
 		synthdesclib = SynthDescLib(projectname.asSymbol);
-		("ixilang/"++projectname++"/synthdefs.scd").load;
+		(Platform.userAppSupportDir +/+ "ixilang/"++projectname++"/synthdefs.scd").load;
 		SynthDescLib.read;
 		synthdefnames = SynthDescLib.getLib(projectname.asSymbol).synthDescs.keys.asArray;
 			if(Object.readArchive(projectpath++"/keyMapping.ixi").isNil, {
