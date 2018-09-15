@@ -355,7 +355,7 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 			var string;
 			var returnVal = nil;
 			var altArrow, altLeft, altPlus, altMinus;
-			[mod, keycode, unicode].postln;
+			//[mod, keycode, unicode].postln;
 
 			altArrow = Platform.case(
 				\osx, { ((keycode==124)||(keycode==123)||(keycode==125)
@@ -423,18 +423,15 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 				font = doc. font;
 				font.size = font.size + 1;
 				doc.font = font;
-				//doc.font.size = doc.font.size +1;
-				//doc.setFont(doc.font,0, inf);
 				//"bigger".postln;
 				returnVal = true;
 			});
 			if(mod.isCtrl && (unicode==45), {
 				var font;
 				font = doc. font;
-				font.size = font.size + 1;
+				font.size = font.size - 1;
 				doc.font = font;
 
-				//doc.font.size = doc.font.size -1;
 				returnVal = true;
 			});
 			returnVal
