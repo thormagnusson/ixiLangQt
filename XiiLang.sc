@@ -354,12 +354,32 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 		doc.keyDownAction_({|doc, char, mod, unicode, keycode |
 			var string;
 			var returnVal = nil;
+			var altArrow, altLeft;
 			//[mod, keycode, unicode].postln;
-			if( mod.isAlt &&
-				((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)||
-					(keycode==111)||(keycode==113)||(keycode==114)||(keycode==116)||
-					(keycode==37)||(keycode==38)||(keycode==39)||(keycode==40)
-				),
+
+			altArrow = Platform.case(
+				\osx, { ((keycode==124)||(keycode==123)||(keycode==125)
+					||(keycode==126)||(keycode==111)||(keycode==113)||
+					(keycode==114)||(keycode==116)||(keycode==37)||
+					(keycode==38)||(keycode==39)||(keycode==40))
+				},
+				\linux, {((keycode>=65361) && (keycode <=65364))},
+				\windows, // I don't know, so this is a copy of the mac:
+				{ ((keycode==124)||(keycode==123)||(keycode==125)
+					||(keycode==126)||(keycode==111)||(keycode==113)||
+					(keycode==114)||(keycode==116)||(keycode==37)||
+					(keycode==38)||(keycode==39)||(keycode==40))
+				}
+			);
+
+			altLeft = Platform.case(
+				\osx, {((keycode==123) || (keycode==37))},
+				\linux,{(keycode==65361)},
+				\windows, // I don't know, so here's a copy of osx
+				{((keycode==123) || (keycode==37))}
+			);
+
+			if( mod.isAlt && altArrow.value,
 				{ // alt + left or up or right or down arrow keys
 				"eval".postln;
 				//linenr = doc.string[..doc.selectionStart-1].split($\n).size;
@@ -369,7 +389,7 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 				(string.size < 1).if({"Hilight some text!".warn});
 
 				// alt + left
-				if((keycode==123) || (keycode==37), { // not 124, 125,
+				if(altLeft.value, { // not 124, 125,
 					this.freeAgent(string);
 				}, {
 					this.opInterpreter(string);
