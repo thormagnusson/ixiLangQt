@@ -402,20 +402,24 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 				returnVal = true;
 			});
 			// tempo tap function (ctrl+, for starting and ctrl+. for stopping (the < and > keys))
-			if(mod.isCtrl && (unicode == 44), {
+			if((mod.isCtrl || mod.isAlt) && (unicode == 44), {
 				if(tapping == false, {
 					time = Main.elapsedTime;
 					tapping = true;
 				});
 				tapcount = tapcount + 1;
 			});
-			if(mod.isCtrl && (unicode == 46), {
-				time = Main.elapsedTime - time;
-				tempo = tapcount / time;
-				tapping = false;
-				tapcount = 0;
-				" --->   ixi lang Tempo : set to % BPM\n".postf(tempo*60);
-				TempoClock.default.tempo = tempo;
+			if((mod.isCtrl || mod.isAlt) && (unicode == 46), {
+				if( (time.isNil  || tapping.not), {
+					"Tap with the comma key first".warn;
+				}, {
+					time = Main.elapsedTime - time;
+					tempo = tapcount / time;
+					tapping = false;
+					tapcount = 0;
+					" --->   ixi lang Tempo : set to % BPM\n".postf(tempo*60);
+					TempoClock.default.tempo = tempo;
+				});
 			});
 			// Change font size
 			if(mod.isCtrl && (unicode==43), {
@@ -1247,7 +1251,7 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 
 		}
 		{"autocode"}{
-			var agent, mode, instrument, score, line, charloc, cursorPos, density, lines, spaces, nextline;
+			var agent, mode, instrument, score, line, charloc, cursorPos, density, lines, spaces, nextline, found, i;
 
 			string = string.replace("    ", " ");
 			string = string.replace("   ", " ");
@@ -1274,7 +1278,12 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 			lines = lines.asInteger;
 			{
 				lines.do({
-					mode = [0,1,2].wchoose([0.5, 0.35, 0.15]);
+					if(( ixiInstr.returnPercussiveInstr.size > 0), {
+						mode = [0,1,2].wchoose([0.5, 0.35, 0.15]);
+					}, {
+						mode = [0,1].wchoose([0.5, 0.35]);
+					});
+
 					agent = "abcdefghijklmnopqrstuvxyzaeyiuxz".scramble[0..(2+(4.rand))];
 					density = rrand(0.15, 0.45);
 					switch(mode)
@@ -1300,13 +1309,24 @@ agent3 -> d{9      8 2   1}@1\n\n\n") },
 						line = agent+"->"+score+"\n";
 					}
 					{2}{
-						instrument = ixiInstr.returnPercussiveInstr.choose;
+						found = false;
+						i = 0;
+						{( i < 3) && found.not }.while({
+							instrument = ixiInstr.returnPercussiveInstr.choose;
+							found = instrument.notNil;
+							if(found, {
+								found = (instrument.asString != "nil");
+							});
+							i = i+1;
+						});
 						score = "";
 						[16, 20, 24].choose.do({
 							score = score ++ if(density.coin, {10.rand}, {" "});
 						});
 						score = instrument++"{"++score++"}";
-						line = agent+"->"+score+"\n";
+						if(found, {
+							line = agent+"->"+score+"\n";
+						});
 					};
 					line.do({arg char, i;
 						charloc = charloc + 1;
