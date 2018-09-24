@@ -295,11 +295,14 @@ XiiLang {
 		*/
 		if(newdoc, {
 			//doc = Document.new;
-			doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
+//			doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
+
 		}, {
 			//doc = Document.current;
-			doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
+	//		doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).front, Rect(0, 0, 600, 700)).resize_(5);
 		});
+
+		doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).background_(Color.white.alpha_(0.0)).front, Rect(0, 0, 600, 700)).resize_(5);
 
 		// color scheme
 		try{ // check if the color file exists
@@ -315,6 +318,9 @@ XiiLang {
 
 		//doc.parent.bounds_(Rect(400,300, 1000, 600));
 		doc.background_(doccolor);
+		doc.background_(Color.white.alpha_(0.0));
+		//doc.background_(Color.white.alpha_(0.0));
+
 		doc.parent.name_("ixi lang   -   project :" + project.quote + "  -   window nr:" + docnum.asString);
 		doc.font_(Font("Monaco", 16));
 		if(txt == false, { doc.string_("oo -> |asdf|
@@ -756,14 +762,23 @@ oxo -> |Sdfsdf| \n\n\n") });
 			}
 			{"tonality"}{
 				var doc;
-				doc = Document.new;
-				doc.name_("scales");
-				doc.promptToSave_(false);
-				doc.background_(Color.black);
-				doc.setStringColor(Color.green, 0, 1000000);
-				doc.bounds_(Rect(10, 500, 500, 800));
-				doc.font_(Font("Monaco",16));
-				doc.string_("Scales: " + ScaleInfo.scales.keys.asArray.sort.asCompileString
+	//			doc = Document.new;
+				doc = TextView.new(Window.new("", Rect(100, 100, 600, 700)).background_(Color.white.alpha_(0.0)).front, Rect(0, 0, 600, 700)).resize_(5);
+
+				//doc.name_("scales");
+				//doc.promptToSave_(false);
+				//doc.setStringColor(Color.green, 0, 1000000);
+				//doc.bounds_(Rect(10, 500, 500, 800));
+				//doc.font_(Font("Monaco",16));
+/*
+			doc.string_("Scales: " + ScaleInfo.scales.keys.asArray.sort.asCompileString
+				+"\n\n Tunings: "+
+				"et12, pythagorean, just, sept1, sept2, mean4, mean5, mean6, kirnberger, werkmeister, vallotti, young, reinhard, wcHarm, wcSJ");
+*/
+
+			//doc.background_(Color.black);
+
+			doc.string_("Scales: " + Scale.names.asCompileString
 				+"\n\n Tunings: "+
 				"et12, pythagorean, just, sept1, sept2, mean4, mean5, mean6, kirnberger, werkmeister, vallotti, young, reinhard, wcHarm, wcSJ");
 			}
